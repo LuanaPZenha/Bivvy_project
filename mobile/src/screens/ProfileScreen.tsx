@@ -68,14 +68,24 @@ export function ProfileScreen() {
           <Text style={styles.secondaryText}>Sign out</Text>
         </Pressable>
       ) : (
-        <Pressable
-          style={styles.primaryBtn}
-          onPress={() => rootNav.navigate('Auth', { screen: 'Login' })}
-          accessibilityRole="button"
-          accessibilityLabel="Sign in"
-        >
-          <Text style={styles.primaryText}>Sign in</Text>
-        </Pressable>
+        <View style={styles.authActions}>
+          <Pressable
+            style={styles.primaryBtn}
+            onPress={() => rootNav.navigate('Auth', { screen: 'Register' })}
+            accessibilityRole="button"
+            accessibilityLabel="Create account"
+          >
+            <Text style={styles.primaryText}>Create account</Text>
+          </Pressable>
+          <Pressable
+            style={styles.secondaryBtn}
+            onPress={() => rootNav.navigate('Auth', { screen: 'Login' })}
+            accessibilityRole="button"
+            accessibilityLabel="Sign in"
+          >
+            <Text style={styles.secondaryText}>Sign in</Text>
+          </Pressable>
+        </View>
       )}
     </View>
   );
@@ -171,6 +181,9 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
     color: colors.muted,
+  },
+  authActions: {
+    gap: spacing.sm,
   },
   primaryBtn: {
     backgroundColor: colors.forest,

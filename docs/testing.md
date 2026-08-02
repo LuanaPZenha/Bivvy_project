@@ -88,6 +88,6 @@ mobile/
 | api-gateway | Health + 404 |
 | auth-service | Register/Login unit + register/login integration |
 | core-service | ListNearYou unit + gear/listings integration |
-| mobile | `CategoryChips`, `ModeToggle`, `ListingCard`, `useListings`, `ListingDetailScreen`, `AuthContext` |
+| mobile | `CategoryChips`, `ModeToggle`, `ListingCard`, `useListings`, `ListingDetailScreen`, `RegisterScreen`, `AuthContext` |
 
 Expand coverage as features land; do not delete the mandatory folders.

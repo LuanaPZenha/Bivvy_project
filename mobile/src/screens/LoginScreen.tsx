@@ -105,6 +105,7 @@ export function LoginScreen({ navigation }: LoginScreenProps) {
       </View>
 
       <GoogleSignInButton
+        label="Sign in with Google"
         onSuccess={() => navigation.getParent()?.goBack()}
         onError={(message) => setError(message || null)}
       />

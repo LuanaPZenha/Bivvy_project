@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Pressable, Text, StyleSheet, ActivityIndicator } from 'react-native';
+import { Pressable, Text, View, StyleSheet, ActivityIndicator } from 'react-native';
 import * as Google from 'expo-auth-session/providers/google';
 import * as WebBrowser from 'expo-web-browser';
 import { useAuth } from '../auth/AuthContext';
@@ -8,11 +8,16 @@ import { colors, radii, spacing } from '../theme/tokens';
 WebBrowser.maybeCompleteAuthSession();
 
 type Props = {
+  label?: string;
   onSuccess?: () => void;
   onError?: (message: string) => void;
 };
 
-export function GoogleSignInButton({ onSuccess, onError }: Props) {
+export function GoogleSignInButton({
+  label = 'Continue with Google',
+  onSuccess,
+  onError,
+}: Props) {
   const { loginWithGoogle } = useAuth();
   const [busy, setBusy] = useState(false);
 
@@ -86,12 +91,17 @@ export function GoogleSignInButton({ onSuccess, onError }: Props) {
       onPress={onPress}
       disabled={!request || busy}
       accessibilityRole="button"
-      accessibilityLabel="Continue with Google"
+      accessibilityLabel={label}
     >
       {busy ? (
         <ActivityIndicator color={colors.ink} />
       ) : (
-        <Text style={styles.label}>Continue with Google</Text>
+        <>
+          <View style={styles.mark}>
+            <Text style={styles.markText}>G</Text>
+          </View>
+          <Text style={styles.label}>{label}</Text>
+        </>
       )}
     </Pressable>
   );
@@ -99,16 +109,34 @@ export function GoogleSignInButton({ onSuccess, onError }: Props) {
 
 const styles = StyleSheet.create({
   btn: {
-    marginTop: spacing.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
     borderWidth: 1,
     borderColor: colors.border,
     backgroundColor: colors.creamCard,
     borderRadius: radii.md,
     paddingVertical: 14,
-    alignItems: 'center',
+    paddingHorizontal: spacing.md,
   },
   btnDisabled: {
     opacity: 0.7,
+  },
+  mark: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    borderWidth: 1,
+    borderColor: colors.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFFFFF',
+  },
+  markText: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#4285F4',
   },
   label: {
     color: colors.ink,

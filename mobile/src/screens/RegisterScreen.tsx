@@ -11,10 +11,14 @@ import {
   ScrollView,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../auth/AuthContext';
 import { GoogleSignInButton } from '../components/GoogleSignInButton';
+import { PineLogo } from '../components/PineLogo';
 import { colors, radii, spacing } from '../theme/tokens';
 import type { RegisterScreenProps } from '../navigation/types';
+
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export function RegisterScreen({ navigation }: RegisterScreenProps) {
   const insets = useSafeAreaInsets();
@@ -22,13 +26,20 @@ export function RegisterScreen({ navigation }: RegisterScreenProps) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+
+  const closeAuth = () => navigation.getParent()?.goBack();
 
   const onSubmit = async () => {
     setError(null);
     if (!email.trim() || !password) {
       setError('Email and password are required');
+      return;
+    }
+    if (!EMAIL_PATTERN.test(email.trim())) {
+      setError('Enter a valid email address');
       return;
     }
     if (password.length < 8) {
@@ -38,7 +49,7 @@ export function RegisterScreen({ navigation }: RegisterScreenProps) {
     setBusy(true);
     try {
       await register(email, password, name || undefined);
-      navigation.getParent()?.goBack();
+      closeAuth();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unable to create account');
     } finally {
@@ -54,19 +65,38 @@ export function RegisterScreen({ navigation }: RegisterScreenProps) {
       <ScrollView
         contentContainerStyle={{ paddingBottom: insets.bottom + spacing.xl }}
         keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
       >
         <Pressable
-          onPress={() => navigation.goBack()}
+          onPress={closeAuth}
           accessibilityRole="button"
-          accessibilityLabel="Back to sign in"
+          accessibilityLabel="Close"
           style={styles.close}
         >
-          <Text style={styles.closeText}>Back</Text>
+          <Ionicons name="close" size={24} color={colors.muted} />
         </Pressable>
 
-        <Text style={styles.brand}>BIVVY</Text>
-        <Text style={styles.title}>Create account</Text>
-        <Text style={styles.subtitle}>Join the outdoor gear marketplace for rentals and sales.</Text>
+        <View style={styles.brandRow}>
+          <PineLogo />
+          <Text style={styles.brand}>BIVVY</Text>
+        </View>
+
+        <Text style={styles.title}>Create your account</Text>
+        <Text style={styles.subtitle}>
+          Rent and buy gear for camping, hiking, climbing, water, snow, and bikes.
+        </Text>
+
+        <GoogleSignInButton
+          label="Sign up with Google"
+          onSuccess={closeAuth}
+          onError={(message) => setError(message || null)}
+        />
+
+        <View style={styles.dividerRow}>
+          <View style={styles.dividerLine} />
+          <Text style={styles.dividerText}>or sign up with email</Text>
+          <View style={styles.dividerLine} />
+        </View>
 
         <Text style={styles.label}>Name</Text>
         <TextInput
@@ -92,15 +122,29 @@ export function RegisterScreen({ navigation }: RegisterScreenProps) {
         />
 
         <Text style={styles.label}>Password</Text>
-        <TextInput
-          style={styles.input}
-          secureTextEntry
-          value={password}
-          onChangeText={setPassword}
-          placeholder="At least 8 characters"
-          placeholderTextColor={colors.muted}
-          accessibilityLabel="Password"
-        />
+        <View style={styles.passwordRow}>
+          <TextInput
+            style={styles.passwordInput}
+            secureTextEntry={!showPassword}
+            value={password}
+            onChangeText={setPassword}
+            placeholder="At least 8 characters"
+            placeholderTextColor={colors.muted}
+            accessibilityLabel="Password"
+          />
+          <Pressable
+            onPress={() => setShowPassword((v) => !v)}
+            accessibilityRole="button"
+            accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}
+            hitSlop={10}
+          >
+            <Ionicons
+              name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+              size={20}
+              color={colors.muted}
+            />
+          </Pressable>
+        </View>
 
         {error ? (
           <Text style={styles.error} accessibilityRole="alert">
@@ -122,16 +166,9 @@ export function RegisterScreen({ navigation }: RegisterScreenProps) {
           )}
         </Pressable>
 
-        <View style={styles.dividerRow}>
-          <View style={styles.dividerLine} />
-          <Text style={styles.dividerText}>or</Text>
-          <View style={styles.dividerLine} />
-        </View>
-
-        <GoogleSignInButton
-          onSuccess={() => navigation.getParent()?.goBack()}
-          onError={(message) => setError(message || null)}
-        />
+        <Text style={styles.terms}>
+          By creating an account you agree to the Bivvy Terms of Service and Privacy Policy.
+        </Text>
 
         <Pressable
           onPress={() => navigation.navigate('Login')}
@@ -152,19 +189,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
   },
   close: {
-    alignSelf: 'flex-start',
-    marginBottom: spacing.md,
+    alignSelf: 'flex-end',
+    marginBottom: spacing.sm,
   },
-  closeText: {
-    color: colors.muted,
-    fontWeight: '600',
+  brandRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: spacing.md,
   },
   brand: {
     fontSize: 18,
     fontWeight: '800',
     letterSpacing: 2,
     color: colors.forest,
-    marginBottom: spacing.sm,
   },
   title: {
     fontSize: 28,
@@ -195,6 +233,23 @@ const styles = StyleSheet.create({
     color: colors.ink,
     fontSize: 15,
   },
+  passwordRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.creamCard,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radii.md,
+    paddingHorizontal: 14,
+    height: 48,
+    marginBottom: spacing.md,
+    gap: 10,
+  },
+  passwordInput: {
+    flex: 1,
+    color: colors.ink,
+    fontSize: 15,
+  },
   error: {
     color: colors.danger,
     marginBottom: spacing.md,
@@ -215,11 +270,19 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     fontSize: 16,
   },
+  terms: {
+    marginTop: spacing.md,
+    fontSize: 12,
+    lineHeight: 18,
+    color: colors.muted,
+    textAlign: 'center',
+  },
   dividerRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
     marginTop: spacing.lg,
+    marginBottom: spacing.lg,
   },
   dividerLine: {
     flex: 1,
