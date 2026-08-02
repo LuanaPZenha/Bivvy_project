@@ -3,7 +3,7 @@
 > Product language: **English** (US market).  
 > Last reviewed: **2026-08-02**
 
-Bivvy is an outdoor adventure gear rental marketplace. This folder is the **source of truth** for how the system is designed, built, secured, and operated.
+Bivvy is an outdoor adventure gear rental and resale marketplace. This folder is the **source of truth** for how the system is designed, built, secured, and operated.
 
 ## Read in this order
 
