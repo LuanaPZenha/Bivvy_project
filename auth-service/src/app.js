@@ -2,7 +2,7 @@
 
 const express = require('express');
 const helmet = require('helmet');
-const { applySanitization } = require('@bivvy/shared/security');
+const { applySanitization } = require('./shared/security');
 const { InMemoryUserRepository } = require('./infrastructure/persistence/InMemoryUserRepository');
 const { BcryptPasswordHasher } = require('./infrastructure/security/BcryptPasswordHasher');
 const { JwtTokenService } = require('./infrastructure/security/JwtTokenService');

@@ -1,7 +1,7 @@
 'use strict';
 
 const rateLimit = require('express-rate-limit');
-const { applySecurityHeaders, applySanitization } = require('@bivvy/shared/security');
+const { applySecurityHeaders, applySanitization } = require('../shared/security');
 const config = require('../config');
 
 function applyGatewaySecurity(app) {

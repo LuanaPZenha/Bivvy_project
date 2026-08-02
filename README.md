@@ -1,47 +1,40 @@
 # Bivvy
 
-Outdoor adventure gear rental marketplace for the US.  
-React Native (Expo) mobile app + Node.js microservices.
+Outdoor adventure gear rental marketplace (US).  
+**Separate deployable units** — no npm workspaces / no monorepo package graph.
 
-## Structure
+## Layout
 
 ```
-/
-├── mobile/                  # Expo app — brand: Bivvy
-├── backend/
-│   ├── api-gateway/         # Public entry (security + routing)
-│   ├── auth-service/        # Auth (DDD / Clean Architecture)
-│   ├── core-service/        # Listings & gear (DDD)
-│   └── shared/              # Shared security helpers
-├── docker-compose.yml
-├── ARCHITECTURE.md
-└── .github/workflows/ci.yml
+mobile/          Expo app
+api-gateway/     Public HTTP edge
+auth-service/    Auth (DDD)
+core-service/    Listings (DDD)
+infra/           Postgres init SQL
+docker-compose.yml
 ```
 
-See [ARCHITECTURE.md](./ARCHITECTURE.md) for DDD layout, OWASP controls, and communication patterns.
+Each of `mobile`, `api-gateway`, `auth-service`, and `core-service` has its **own** `package.json`, dependencies, and tests. See [ARCHITECTURE.md](./ARCHITECTURE.md).
 
 ## Quick start
 
 ```bash
-cp .env.example .env
-# edit secrets in .env — never commit this file
+cp .env.example .env   # never commit .env
 
-npm install
+# Install & test each service independently
+cd api-gateway && npm install && npm test && cd ..
+cd auth-service && npm install && npm test && cd ..
+cd core-service && npm install && npm test && cd ..
+cd mobile && npm install && npm test && cd ..
+
+# Run the stack locally
 docker compose up --build
 ```
 
-- API Gateway: `http://localhost:3000`
+- Gateway: `http://localhost:3000`
 - Mobile: `cd mobile && npx expo start` (set `EXPO_PUBLIC_API_URL`)
 
-## Tests
+## How services talk
 
-```bash
-npm run test:backend   # Jest unit (use cases) + Supertest integration
-npm run test:mobile    # Jest + React Native Testing Library
-```
-
-## Security notes
-
-- `.env`, keys, and credentials are gitignored
-- Tokens on device: Expo SecureStore
-- Public client only talks to the API Gateway over HTTPS (in production)
+Today: **HTTP** through the API Gateway. Auth/Core stay on the private Docker network.  
+Later: optional message broker for async events — documented in ARCHITECTURE.md.

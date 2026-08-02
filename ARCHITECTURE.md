@@ -1,11 +1,31 @@
 # Bivvy Architecture
 
 > Outdoor gear rental marketplace for the US market.  
-> Mobile app (React Native / Expo) + Node.js microservices behind an API Gateway.
+> Independently deployable services — **not a monorepo / not npm workspaces**.
 
 ---
 
-## 1. High-level overview
+## 1. Repository layout (poly-service)
+
+Each app/service is a **standalone Node project** with its own `package.json`, lockfile, Dockerfile, and tests. They communicate only over the network (HTTP today).
+
+```
+/
+├── mobile/              # Expo app (own deps)
+├── api-gateway/         # Public edge (own deps)
+├── auth-service/        # Auth domain (own deps)
+├── core-service/        # Listings domain (own deps)
+├── infra/postgres/      # DB bootstrap SQL only
+├── docker-compose.yml   # Local orchestration (not a code dependency)
+├── ARCHITECTURE.md
+└── .github/workflows/   # CI runs each service in isolation
+```
+
+There is **no root `package.json`**, no shared workspace package, and no cross-service `require()`.
+
+---
+
+## 2. High-level overview
 
 ```
 ┌─────────────────┐
@@ -15,142 +35,85 @@
          │ HTTPS
          ▼
 ┌─────────────────┐
-│  API Gateway    │  Helmet, CORS, rate limit, sanitization, JWT verify
-│  :3000          │  Routes /auth/* → AuthService, /gear|/listings → CoreService
+│  API Gateway    │  Helmet, CORS, rate limit, sanitization, JWT gate
+│  :3000          │  Routes /api/auth → Auth, /api/gear|/listings → Core
 └────┬───────┬────┘
      │ HTTP  │ HTTP
      ▼       ▼
 ┌─────────┐ ┌──────────┐
 │ Auth    │ │ Core     │
 │ :3001   │ │ :3002    │
-│ (DDD)   │ │ (DDD)    │
 └────┬────┘ └────┬─────┘
-     │           │
      ▼           ▼
-┌─────────┐  ┌─────────┐     ┌───────┐
-│ Postgres│  │ Postgres│     │ Redis │
-│ auth DB │  │ core DB │     │ refresh│
-└─────────┘  └─────────┘     └───────┘
+ Postgres     Postgres (+ Redis for refresh tokens on Auth)
 ```
 
-**Service communication (current decision):** synchronous **HTTP** via the API Gateway for request/response flows (login, search, list gear). Inter-service calls are internal Docker network only — microservices are **not** exposed publicly except through the gateway.
+**Communication:** synchronous **HTTP** via the API Gateway for request/response. Auth and Core are not publicly exposed (`expose` only on the Docker network).
 
-**Future mensageria:** when we add async domain events (e.g. `ListingCreated`, `BookingConfirmed`, notifications), introduce a message broker (RabbitMQ or AWS SNS/SQS). Until then, keep HTTP to reduce operational complexity.
-
----
-
-## 2. Technology stack
-
-| Layer | Choice |
-|--------|--------|
-| Mobile | React Native + Expo |
-| Backend | Node.js 20+, Express, TypeScript |
-| Gateway | Express reverse-proxy / route forwarding |
-| Data | PostgreSQL (per-service DB), Redis (refresh tokens) |
-| Containers | Docker + Compose |
-| CI/CD | GitHub Actions (lint, test, build images) |
-| Tests | Jest + Supertest (backend), Jest + RNTL (mobile) |
+**Future mensageria:** domain events (e.g. `ListingCreated`) can use RabbitMQ / SNS+SQS later. Until then, keep HTTP.
 
 ---
 
-## 3. Microservices & DDD / Clean Architecture
+## 3. Independence rules
 
-Each service isolates the **domain** from frameworks and persistence:
+| Rule | Why |
+|------|-----|
+| Own `package.json` + lockfile per service | Independent versioning & deploys |
+| Own Dockerfile | Build/push without other services |
+| No shared npm package in-repo | Avoid accidental coupling |
+| Duplicate thin security helpers if needed | Prefer copy over a shared library for now |
+| Separate CI jobs | Jobs run in parallel per service |
+
+Security helpers live **inside** each service under `src/shared/security.js` (local to that service, not a published package).
+
+---
+
+## 4. DDD / Clean Architecture (Auth & Core)
 
 ```
 src/
-  domain/           # Entities, value objects, repository ports (no Express/DB)
-  application/      # Use cases + DTOs (orchestration)
-  infrastructure/   # DB adapters, JWT/bcrypt, external APIs
-  interfaces/http/  # Controllers, routes, middlewares
-  shared/           # Cross-cutting helpers local to the service
+  domain/           # Entities, value objects, repository ports
+  application/      # Use cases + DTOs
+  infrastructure/   # DB, JWT/bcrypt adapters
+  interfaces/http/  # Controllers, routes
+  shared/           # Local cross-cutting (security scrubbers)
 ```
 
-### AuthService
-- Register / login / logout / refresh token rotation
-- Password hashing (bcrypt, high cost factor)
-- Access JWT (short-lived) + refresh tokens stored hashed in Redis
-- Domain: `User`, `RefreshToken`
+### Auth Service
+- Register / login / refresh
+- bcrypt passwords, short-lived JWT + opaque refresh tokens
 
-### CoreService
-- Gear listings, categories, search “near you”, Pro listing flags
-- Domain: `Listing`, `Category`, `OwnerProfile`
-- Validates access JWT via shared secret (or future JWKS)
+### Core Service
+- Near-you listings, categories, create listing
 
 ### API Gateway
-- Single public entry point
-- Security middleware stack (OWASP baseline)
-- Proxies to Auth / Core; strips internal headers
+- Edge security + reverse proxy only (no domain logic)
 
 ---
 
-## 4. Security (OWASP-aligned)
+## 5. Security (OWASP-aligned)
 
-### API
-- **Helmet** — secure HTTP headers
-- **CORS** — allowlist only (`CORS_ORIGIN`)
-- **Rate limiting** — per IP (gateway + auth login stricter)
-- **Input sanitization** — `express-mongo-sanitize` + XSS scrubbing
-- **No secrets in responses** — never return password hashes or refresh raw tokens in logs
-- **Internal ports** — Auth/Core only `expose`d, not published to host in production
-
-### Authentication
-- Access token: JWT HS256 (or RS256 later), short TTL (~15m)
-- Refresh token: opaque, stored hashed, rotated on use, revocable in Redis
-- Passwords: bcrypt (cost ≥ 12) — Argon2 optional upgrade path
-
-### Mobile
-- Tokens in **Expo SecureStore** (Keychain / Keystore)
-- No API secrets in the client — only `EXPO_PUBLIC_API_URL`
-- Certificate pinning: planned for production builds (documented hook in `mobile/src/security/`)
-
-Secrets live in `.env` (gitignored). Only `.env.example` is committed.
+- Helmet, restricted CORS, rate limiting, input sanitization
+- JWT access tokens; refresh tokens hashed at rest (Redis in production)
+- Mobile: Expo SecureStore; certificate pinning hook for release builds
+- Secrets only in `.env` (gitignored); commit `.env.example` only
+- Internal services not published on host ports in production
 
 ---
 
-## 5. Testing requirements
+## 6. Testing
 
-| Layer | Tooling | Mandatory |
-|--------|---------|-----------|
-| Backend use cases | Jest unit tests | Yes — every application use case |
-| Backend routes | Jest + Supertest integration | Yes — per microservice |
-| Mobile UI | Jest + React Native Testing Library | Components + hooks |
+| Service | Unit (use cases) | Integration (routes) |
+|---------|------------------|----------------------|
+| auth-service | Jest | Jest + Supertest |
+| core-service | Jest | Jest + Supertest |
+| api-gateway | — | Jest + Supertest |
+| mobile | hooks | RNTL components |
 
-CI fails if unit or integration suites fail.
-
----
-
-## 6. Repository layout
-
-```
-/
-├── mobile/                 # Expo app (Bivvy)
-├── backend/
-│   ├── api-gateway/
-│   ├── auth-service/
-│   ├── core-service/
-│   └── shared/             # Shared types & security helpers (workspace)
-├── .github/workflows/      # CI
-├── docker-compose.yml
-├── ARCHITECTURE.md
-└── package.json            # npm workspaces root
-```
+Run inside each folder: `npm test`.
 
 ---
 
-## 7. CI/CD (GitHub Actions)
+## 7. Local orchestration
 
-Pipeline (`.github/workflows/ci.yml`):
-1. Install workspaces
-2. Lint + Prettier check
-3. Run backend unit + integration tests
-4. Run mobile tests
-5. Build Docker images (no push secrets in PRs)
-
-Deploy stages (staging/prod) will be added when environments exist.
-
----
-
-## 8. English-first product
-
-UI copy, API error messages for clients, and docs aimed at US users are written in **English**. Internal engineering notes may use PT-BR when collaborating locally.
+`docker compose up --build` wires the independent images together for local/dev. Production may deploy each service to its own host/cluster with the same env contract.
