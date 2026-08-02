@@ -39,6 +39,11 @@ services:
       BCRYPT_ROUNDS: 12
       DATABASE_URL: ${AUTH_DATABASE_URL:-postgresql://bivvy:bivvy@postgres:5432/bivvy_auth}
       REDIS_URL: ${REDIS_URL:-redis://redis:6379}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      SEED_DEMO_USER: ${SEED_DEMO_USER:-true}
+      DEMO_USER_EMAIL: ${DEMO_USER_EMAIL:-demo@bivvy.test}
+      DEMO_USER_PASSWORD: ${DEMO_USER_PASSWORD:-BivvyDemo123}
     depends_on:
       postgres:
         condition: service_healthy

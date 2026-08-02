@@ -1,4 +1,5 @@
 import { getAccessToken } from '../security/secureCredentials';
+import type { AuthTokensResponse } from '../types/user';
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000';
 
@@ -26,7 +27,7 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
   });
 
   if (!res.ok) {
-    const errBody = await res.json().catch(() => ({}));
+    const errBody = (await res.json().catch(() => ({}))) as { error?: string };
     throw new Error(errBody.error || `Request failed (${res.status})`);
   }
 
@@ -35,4 +36,29 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
 
 export function getApiBaseUrl(): string {
   return API_URL;
+}
+
+export async function loginRequest(email: string, password: string): Promise<AuthTokensResponse> {
+  return apiRequest<AuthTokensResponse>('/api/auth/login', {
+    method: 'POST',
+    body: { email, password },
+  });
+}
+
+export async function registerRequest(
+  email: string,
+  password: string,
+  name?: string,
+): Promise<AuthTokensResponse> {
+  return apiRequest<AuthTokensResponse>('/api/auth/register', {
+    method: 'POST',
+    body: { email, password, name },
+  });
+}
+
+export async function googleLoginRequest(idToken: string): Promise<AuthTokensResponse> {
+  return apiRequest<AuthTokensResponse>('/api/auth/google', {
+    method: 'POST',
+    body: { idToken },
+  });
 }

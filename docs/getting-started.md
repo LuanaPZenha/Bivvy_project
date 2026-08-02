@@ -33,12 +33,48 @@ Edit `.env` and replace placeholder secrets. **Never commit `.env`.**
 | `JWT_REFRESH_SECRET` | Refresh token HMAC secret |
 | `CORS_ORIGIN` | Allowed browser/mobile origin(s), comma-separated |
 | `EXPO_PUBLIC_API_URL` | Mobile public API base (gateway only) |
+| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Google Web OAuth client (auth-service) |
+| `EXPO_PUBLIC_GOOGLE_CLIENT_ID` | Same Web client ID for Expo (public) |
+| `EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID` | Android OAuth client (required for Google sign-in on Android) |
+| `EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID` | iOS OAuth client (required for Google sign-in on iOS) |
 
 Generate strong JWT secrets, for example:
 
 ```bash
 openssl rand -base64 64
 ```
+
+### Google Sign-In credentials
+
+After downloading `client_secret_*.json` from Google Cloud, load it into `.env`:
+
+```powershell
+powershell -File scripts/load-google-credentials.ps1
+# or
+powershell -File scripts/load-google-credentials.ps1 -JsonPath "C:\Users\you\Downloads\client_secret_....json"
+```
+
+Add your Google account under **OAuth → Target audience → Test users**. Restart `docker compose` / auth-service after updating `.env`.
+
+The Web client alone only covers Expo web. Google sign-in **on a device** also needs a native OAuth client:
+
+| Platform | Client type | Package / Bundle ID |
+|----------|-------------|---------------------|
+| Android in Expo Go | Android | `host.exp.exponent` (plus the Expo Go signing SHA-1) |
+| Android standalone build | Android | `com.bivvy.app` (plus your build's SHA-1) |
+| iOS | iOS | `com.bivvy.app` |
+
+Copy each generated client ID into `EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID` / `EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID`. Until then, the Google button reports that the platform client is missing and email sign-up still works.
+
+### Demo login (development)
+
+The auth service seeds a demo account outside production so you can sign in immediately:
+
+| Email | Password |
+|-------|----------|
+| `demo@bivvy.test` | `BivvyDemo123` |
+
+Disable it with `SEED_DEMO_USER=false`. See [Auth Service](./services/auth-service.md).
 
 ## 2. Install each project independently
 
