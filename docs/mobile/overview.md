@@ -6,7 +6,7 @@ Expo (React Native) client for Bivvy — US English UI for outdoor gear rental.
 |--|--|
 | Package | `bivvy-mobile` |
 | Directory | `mobile/` |
-| Framework | Expo SDK ~52, React Native 0.76 |
+| Framework | Expo SDK ~54, React Native 0.81 |
 | Status | Bootstrap (home screen + mock listings) |
 
 ## Purpose
