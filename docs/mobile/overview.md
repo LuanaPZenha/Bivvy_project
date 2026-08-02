@@ -54,6 +54,7 @@ mobile/
 
 - **Listings:** `useListings` filters mock data in `src/types/listing.ts` by mode, category, and query. Wiring the feed to `GET /api/gear/near` is **Planned**.
 - **Auth:** tokens + user JSON in SecureStore via `AuthContext`. No `/me` endpoint yet — session restores from stored user when an access token exists.
+- **Google sign-in:** backend route and `GoogleSignInButton` exist, but the button is not rendered in the auth screens yet (**Planned**: enable after Android/iOS OAuth clients are configured).
 
 ## Commands
 
