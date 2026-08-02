@@ -34,6 +34,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (!cancelled && token && stored) {
           setUser(stored);
         }
+      } catch {
+        // Ignore bootstrap storage failures (e.g. web / SecureStore unavailable).
       } finally {
         if (!cancelled) setIsLoading(false);
       }
