@@ -24,6 +24,10 @@
     },
     "extra": {
       "apiUrl": "${EXPO_PUBLIC_API_URL}"
-    }
+    },
+    "plugins": [
+      "expo-asset",
+      "expo-font"
+    ]
   }
 }

@@ -1,0 +1,37 @@
+# Ping the Render free-tier web service so it does not spin down after ~15m idle.
+# GitHub cron can drift a few minutes; */10 stays inside the 15m window.
+name: Keep Render Awake
+
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Ping Render /health
+        env:
+          RENDER_HEALTH_URL: ${{ vars.RENDER_HEALTH_URL }}
+        run: |
+          set -euo pipefail
+          URL="${RENDER_HEALTH_URL:-https://bivvy-project.onrender.com/health}"
+          echo "Pinging ${URL}"
+          # Cold starts can take ~60s; allow headroom. Soft-fail so a single
+          # flaky tick does not mark the workflow red while Render wakes up.
+          HTTP_STATUS="$(curl -sS -o /tmp/render-health-body -w '%{http_code}' \
+            --connect-timeout 30 \
+            --max-time 90 \
+            "${URL}" || echo '000')"
+          echo "HTTP status: ${HTTP_STATUS}"
+          if [ -f /tmp/render-health-body ]; then
+            head -c 200 /tmp/render-health-body || true
+            echo
+          fi
+          if [ "${HTTP_STATUS}" = "200" ]; then
+            echo "OK — Render service responded 200."
+          else
+            echo "::warning::Ping returned status=${HTTP_STATUS}. Render may be cold-starting; next schedule will retry."
+          fi
