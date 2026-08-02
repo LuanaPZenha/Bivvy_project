@@ -1,0 +1,31 @@
+---
+description: Keep Bivvy English docs accurate whenever the app or services change
+alwaysApply: true
+---
+
+# Bivvy documentation maintenance
+
+Bivvy documentation is **English-only** under `docs/`. It must stay synchronized with the code.
+
+## When you change the product
+
+In the **same change** (commit/PR), update the matching docs:
+
+| Change type | Update |
+|-------------|--------|
+| Structure / new service | `docs/README.md`, `docs/architecture.md`, new `docs/services/*.md` |
+| HTTP routes / payloads | `docs/api/*.md` + service page |
+| Auth / security / env | `docs/security.md`, `docs/getting-started.md`, `.env.example` |
+| Mobile UI / copy / brand | `docs/mobile/ui-and-brand.md`, `docs/mobile/overview.md` |
+| Tests / CI / Docker | `docs/testing.md`, `docs/ci-cd.md` |
+
+Follow the checklist in `docs/DOCUMENTATION.md`.
+
+## Rules
+
+- Do **not** document secrets; use placeholders only.
+- Mark unfinished work as **Planned** or **Bootstrap** — never as shipped.
+- Keep root `README.md` short; deep content belongs in `docs/`.
+- Root `ARCHITECTURE.md` is only a pointer — edit `docs/architecture.md`.
+- Bump **Last reviewed** on `docs/README.md` when you make a meaningful docs pass.
+- Product UI strings and client API messages remain in English (US).
