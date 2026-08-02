@@ -13,7 +13,6 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../auth/AuthContext';
-import { GoogleSignInButton } from '../components/GoogleSignInButton';
 import { PineLogo } from '../components/PineLogo';
 import { colors, radii, spacing } from '../theme/tokens';
 import type { RegisterScreenProps } from '../navigation/types';
@@ -26,6 +25,7 @@ export function RegisterScreen({ navigation }: RegisterScreenProps) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -34,6 +34,7 @@ export function RegisterScreen({ navigation }: RegisterScreenProps) {
 
   const onSubmit = async () => {
     setError(null);
+
     if (!email.trim() || !password) {
       setError('Email and password are required');
       return;
@@ -46,6 +47,11 @@ export function RegisterScreen({ navigation }: RegisterScreenProps) {
       setError('Password must be at least 8 characters');
       return;
     }
+    if (password !== confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+
     setBusy(true);
     try {
       await register(email, password, name || undefined);
@@ -86,18 +92,6 @@ export function RegisterScreen({ navigation }: RegisterScreenProps) {
           Rent and buy gear for camping, hiking, climbing, water, snow, and bikes.
         </Text>
 
-        <GoogleSignInButton
-          label="Sign up with Google"
-          onSuccess={closeAuth}
-          onError={(message) => setError(message || null)}
-        />
-
-        <View style={styles.dividerRow}>
-          <View style={styles.dividerLine} />
-          <Text style={styles.dividerText}>or sign up with email</Text>
-          <View style={styles.dividerLine} />
-        </View>
-
         <Text style={styles.label}>Name</Text>
         <TextInput
           style={styles.input}
@@ -105,6 +99,7 @@ export function RegisterScreen({ navigation }: RegisterScreenProps) {
           onChangeText={setName}
           placeholder="Alex"
           placeholderTextColor={colors.muted}
+          autoCapitalize="words"
           accessibilityLabel="Name"
         />
 
@@ -145,6 +140,17 @@ export function RegisterScreen({ navigation }: RegisterScreenProps) {
             />
           </Pressable>
         </View>
+
+        <Text style={styles.label}>Confirm password</Text>
+        <TextInput
+          style={styles.input}
+          secureTextEntry={!showPassword}
+          value={confirmPassword}
+          onChangeText={setConfirmPassword}
+          placeholder="Repeat your password"
+          placeholderTextColor={colors.muted}
+          accessibilityLabel="Confirm password"
+        />
 
         {error ? (
           <Text style={styles.error} accessibilityRole="alert">
@@ -276,23 +282,6 @@ const styles = StyleSheet.create({
     lineHeight: 18,
     color: colors.muted,
     textAlign: 'center',
-  },
-  dividerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    marginTop: spacing.lg,
-    marginBottom: spacing.lg,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: colors.border,
-  },
-  dividerText: {
-    color: colors.muted,
-    fontSize: 13,
-    fontWeight: '600',
   },
   link: {
     marginTop: spacing.lg,

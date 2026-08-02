@@ -9,17 +9,6 @@ jest.mock('../../src/auth/AuthContext', () => ({
   useAuth: () => ({ register: mockRegister }),
 }));
 
-jest.mock('../../src/components/GoogleSignInButton', () => {
-  const { Pressable, Text } = require('react-native');
-  return {
-    GoogleSignInButton: ({ label }: { label?: string }) => (
-      <Pressable accessibilityLabel={label}>
-        <Text>{label}</Text>
-      </Pressable>
-    ),
-  };
-});
-
 function renderScreen() {
   const navigation = { navigate: jest.fn(), goBack: jest.fn(), getParent: () => ({ goBack: jest.fn() }) };
   const utils = render(
@@ -38,11 +27,6 @@ function renderScreen() {
 describe('RegisterScreen', () => {
   beforeEach(() => jest.clearAllMocks());
 
-  it('shows the Google sign-up option', () => {
-    const { getByLabelText } = renderScreen();
-    expect(getByLabelText('Sign up with Google')).toBeTruthy();
-  });
-
   it('validates email format before calling register', async () => {
     const { getByLabelText, getByText } = renderScreen();
 
@@ -54,6 +38,18 @@ describe('RegisterScreen', () => {
     expect(mockRegister).not.toHaveBeenCalled();
   });
 
+  it('requires matching passwords', async () => {
+    const { getByLabelText, getByText } = renderScreen();
+
+    fireEvent.changeText(getByLabelText('Email'), 'hiker@example.com');
+    fireEvent.changeText(getByLabelText('Password'), 'StrongPass1!');
+    fireEvent.changeText(getByLabelText('Confirm password'), 'Different1!');
+    fireEvent.press(getByLabelText('Create account'));
+
+    await waitFor(() => expect(getByText('Passwords do not match')).toBeTruthy());
+    expect(mockRegister).not.toHaveBeenCalled();
+  });
+
   it('registers with valid input', async () => {
     mockRegister.mockResolvedValue(undefined);
     const { getByLabelText } = renderScreen();
@@ -61,6 +57,7 @@ describe('RegisterScreen', () => {
     fireEvent.changeText(getByLabelText('Name'), 'Alex');
     fireEvent.changeText(getByLabelText('Email'), 'hiker@example.com');
     fireEvent.changeText(getByLabelText('Password'), 'StrongPass1!');
+    fireEvent.changeText(getByLabelText('Confirm password'), 'StrongPass1!');
     fireEvent.press(getByLabelText('Create account'));
 
     await waitFor(() =>

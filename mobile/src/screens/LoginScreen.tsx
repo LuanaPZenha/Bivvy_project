@@ -11,7 +11,6 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../auth/AuthContext';
-import { GoogleSignInButton } from '../components/GoogleSignInButton';
 import { colors, radii, spacing } from '../theme/tokens';
 import type { LoginScreenProps } from '../navigation/types';
 
@@ -97,18 +96,6 @@ export function LoginScreen({ navigation }: LoginScreenProps) {
       >
         {busy ? <ActivityIndicator color={colors.cream} /> : <Text style={styles.ctaText}>Sign in</Text>}
       </Pressable>
-
-      <View style={styles.dividerRow}>
-        <View style={styles.dividerLine} />
-        <Text style={styles.dividerText}>or</Text>
-        <View style={styles.dividerLine} />
-      </View>
-
-      <GoogleSignInButton
-        label="Sign in with Google"
-        onSuccess={() => navigation.getParent()?.goBack()}
-        onError={(message) => setError(message || null)}
-      />
 
       <Pressable
         onPress={() => navigation.navigate('Register')}

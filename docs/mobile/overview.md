@@ -46,8 +46,8 @@ mobile/
 |--------|--------|-------------|
 | Home (Explore) | Current | Forest header, Rent/Buy toggle, categories, Pro banner, Near You list |
 | Listing detail | Current | Mode-aware price, owner/rating, description, Coming soon CTA |
-| Register (auth entry) | Current | Google-first sign-up, email/password form, show/hide password, terms note |
-| Login | Current | Email/password + **Sign in with Google** (`POST /api/auth/google`) |
+| Register (auth entry) | Current | Email/password sign-up with validation, confirm password, show/hide, terms note |
+| Login | Current | Email/password sign-in |
 | Profile | Current | Guest or signed-in card; stub rows for rentals/saved/listings |
 
 ## Data today

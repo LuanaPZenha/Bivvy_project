@@ -37,8 +37,7 @@ Defined in `mobile/src/theme/tokens.ts`:
 
 - Detail CTA labels: **Request rental** / **Buy** (alert: Coming soon).
 - Auth copy stays English; errors surface gateway messages when available.
-- Google CTA labels: **Sign up with Google** (register, above the form) and **Sign in with Google** (login, below the form).
-- Register is the default auth entry; dividers read `or sign up with email`.
+- Register is the default auth entry (email/password). The Google button component exists but is not mounted yet — device sign-in still needs native OAuth clients.
 
 ## Copy examples (English)
 

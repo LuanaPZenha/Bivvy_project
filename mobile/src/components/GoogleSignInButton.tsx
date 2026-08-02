@@ -53,10 +53,7 @@ export function GoogleSignInButton({
         return;
       }
 
-      const idToken =
-        response.params?.id_token ||
-        // @ts-expect-error authentication may include idToken on some platforms
-        response.authentication?.idToken;
+      const idToken = response.params?.id_token || response.authentication?.idToken;
 
       if (!idToken) {
         onError?.('Google did not return an ID token');
