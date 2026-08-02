@@ -13,6 +13,7 @@ Authentication and session token issuance for Bivvy. Built with DDD + Clean Arch
 
 - Register users with bcrypt-hashed passwords.
 - Login and issue access JWT + opaque refresh tokens.
+- Google Sign-In via ID token verification (find-or-create / account link by email).
 - Rotate refresh tokens.
 - Own the `bivvy_auth` database (Compose-ready; adapter Planned).
 
@@ -27,10 +28,12 @@ auth-service/src/
   application/use-cases/
     RegisterUser.js
     LoginUser.js
+    LoginWithGoogle.js
     RefreshSession.js
   infrastructure/
     persistence/InMemoryUserRepository.js
     security/BcryptPasswordHasher.js
+    security/GoogleIdTokenVerifier.js
     security/JwtTokenService.js
   interfaces/http/
     controllers/AuthController.js
@@ -44,6 +47,7 @@ auth-service/src/
 |--------|------|-------|
 | `POST` | `/auth/register` | Public |
 | `POST` | `/auth/login` | Public + stricter rate limit |
+| `POST` | `/auth/google` | Public + login rate limit; Google ID token |
 | `POST` | `/auth/refresh` | Public with refresh body |
 | `GET` | `/health` | Liveness |
 
@@ -59,6 +63,8 @@ Clients should call the **gateway** paths under `/api/auth/*`. See [Auth API](..
 | `JWT_ACCESS_EXPIRES_IN` | `15m` | Access TTL |
 | `JWT_REFRESH_EXPIRES_IN` | `7d` | Refresh TTL |
 | `BCRYPT_ROUNDS` | `12` | Hash cost |
+| `GOOGLE_CLIENT_ID` | — | Web OAuth client ID (ID token audience) |
+| `GOOGLE_CLIENT_SECRET` | — | Web OAuth client secret (server-side only; not required for ID token verify) |
 | `DATABASE_URL` | Compose URL | Planned Postgres adapter |
 | `REDIS_URL` | Compose URL | Planned refresh store |
 

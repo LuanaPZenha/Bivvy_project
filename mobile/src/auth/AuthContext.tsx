@@ -6,7 +6,7 @@ import {
   saveTokens,
   saveUser,
 } from '../security/secureCredentials';
-import { loginRequest, registerRequest } from '../services/api';
+import { googleLoginRequest, loginRequest, registerRequest } from '../services/api';
 import type { AuthUser } from '../types/user';
 
 type AuthContextValue = {
@@ -15,6 +15,7 @@ type AuthContextValue = {
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string, name?: string) => Promise<void>;
+  loginWithGoogle: (idToken: string) => Promise<void>;
   logout: () => Promise<void>;
 };
 
@@ -64,6 +65,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     [persistSession],
   );
 
+  const loginWithGoogle = useCallback(
+    async (idToken: string) => {
+      const res = await googleLoginRequest(idToken);
+      await persistSession(res.accessToken, res.refreshToken, res.user);
+    },
+    [persistSession],
+  );
+
   const logout = useCallback(async () => {
     await clearSession();
     setUser(null);
@@ -76,9 +85,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       isAuthenticated: Boolean(user),
       login,
       register,
+      loginWithGoogle,
       logout,
     }),
-    [user, isLoading, login, register, logout],
+    [user, isLoading, login, register, loginWithGoogle, logout],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -37,6 +37,7 @@ Defined in `mobile/src/theme/tokens.ts`:
 
 - Detail CTA labels: **Request rental** / **Buy** (alert: Coming soon).
 - Auth copy stays English; errors surface gateway messages when available.
+- Google CTA label: **Continue with Google** (below an `or` divider on login/register).
 
 ## Copy examples (English)
 

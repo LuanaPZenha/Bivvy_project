@@ -55,3 +55,10 @@ export async function registerRequest(
     body: { email, password, name },
   });
 }
+
+export async function googleLoginRequest(idToken: string): Promise<AuthTokensResponse> {
+  return apiRequest<AuthTokensResponse>('/api/auth/google', {
+    method: 'POST',
+    body: { idToken },
+  });
+}

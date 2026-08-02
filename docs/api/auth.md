@@ -75,6 +75,44 @@ Authenticate with email/password.
 
 ---
 
+## POST `/api/auth/google`
+
+Sign in (or register) with a Google ID token from the mobile/web client.
+
+### Request
+
+```json
+{
+  "idToken": "<google-id-token>"
+}
+```
+
+| Field | Required | Rules |
+|-------|----------|-------|
+| `idToken` | Yes | Google Sign-In ID token; audience must match `GOOGLE_CLIENT_ID` |
+
+### Behavior
+
+1. Verify the ID token with Google (`google-auth-library`).
+2. Require a verified email on the Google account.
+3. Find an existing user by email, or create a Google-linked user (no password).
+4. If an email/password user already exists, link `googleSub` and keep their password hash.
+5. Return the same token envelope as login/register.
+
+### Responses
+
+**200 OK** — same token envelope as register/login.
+
+| Status | Error message | When |
+|--------|---------------|------|
+| 400 | `Google ID token required` | Missing body field |
+| 401 | `Invalid Google ID token` | Verification failed |
+| 401 | `Google email is not verified` | Google account email unverified |
+| 503 | `Google sign-in is not configured` | `GOOGLE_CLIENT_ID` missing on auth-service |
+| 429 | `Too many login attempts` | Shared login rate limit |
+
+---
+
 ## POST `/api/auth/refresh`
 
 Rotate refresh token and issue a new access/refresh pair.

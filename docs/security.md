@@ -31,6 +31,8 @@ Auth login has an **additional** stricter rate limit (20 / 15 min) inside `auth-
 
 ## Authentication & passwords — Current / Bootstrap
 
+Google Sign-In uses a Google **ID token** verified server-side (`GOOGLE_CLIENT_ID` audience). The mobile app only receives the public Web client ID (`EXPO_PUBLIC_GOOGLE_CLIENT_ID`). Never ship `GOOGLE_CLIENT_SECRET` to the client. OAuth consent stays in **Testing** until verification; only listed test users can sign in.
+
 | Topic | Decision |
 |-------|----------|
 | Password hashing | bcrypt, `BCRYPT_ROUNDS` default `12` |

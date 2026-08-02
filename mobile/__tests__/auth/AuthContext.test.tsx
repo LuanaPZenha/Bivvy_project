@@ -19,9 +19,12 @@ jest.mock('../../src/security/secureCredentials', () => ({
   getStoredUser: (...args: unknown[]) => mockGetStoredUser(...args),
 }));
 
+const mockGoogleLoginRequest = jest.fn();
+
 jest.mock('../../src/services/api', () => ({
   loginRequest: (...args: unknown[]) => mockLoginRequest(...args),
   registerRequest: (...args: unknown[]) => mockRegisterRequest(...args),
+  googleLoginRequest: (...args: unknown[]) => mockGoogleLoginRequest(...args),
 }));
 
 function Probe() {

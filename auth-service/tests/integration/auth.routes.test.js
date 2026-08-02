@@ -34,4 +34,24 @@ describe('Auth routes integration', () => {
       .send({ email: 'weak@bivvy.test', password: '123' });
     expect(res.status).toBe(400);
   });
+
+  it('POST /auth/google with mocked verifier returns tokens', async () => {
+    const googleApp = createApp({
+      googleTokenVerifier: {
+        verify: async () => ({
+          email: 'google.user@bivvy.test',
+          emailVerified: true,
+          name: 'Google User',
+          sub: 'sub-123',
+        }),
+      },
+    });
+
+    const res = await request(googleApp).post('/auth/google').send({ idToken: 'test-id-token' });
+    expect(res.status).toBe(200);
+    expect(res.body.user.email).toBe('google.user@bivvy.test');
+    expect(res.body.accessToken).toBeDefined();
+    expect(res.body.refreshToken).toBeDefined();
+  });
 });
+

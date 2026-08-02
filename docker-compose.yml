@@ -39,6 +39,8 @@ services:
       BCRYPT_ROUNDS: 12
       DATABASE_URL: ${AUTH_DATABASE_URL:-postgresql://bivvy:bivvy@postgres:5432/bivvy_auth}
       REDIS_URL: ${REDIS_URL:-redis://redis:6379}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
     depends_on:
       postgres:
         condition: service_healthy

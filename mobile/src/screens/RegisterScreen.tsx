@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import {
+  View,
   Text,
   TextInput,
   Pressable,
@@ -11,6 +12,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../auth/AuthContext';
+import { GoogleSignInButton } from '../components/GoogleSignInButton';
 import { colors, radii, spacing } from '../theme/tokens';
 import type { RegisterScreenProps } from '../navigation/types';
 
@@ -120,6 +122,17 @@ export function RegisterScreen({ navigation }: RegisterScreenProps) {
           )}
         </Pressable>
 
+        <View style={styles.dividerRow}>
+          <View style={styles.dividerLine} />
+          <Text style={styles.dividerText}>or</Text>
+          <View style={styles.dividerLine} />
+        </View>
+
+        <GoogleSignInButton
+          onSuccess={() => navigation.getParent()?.goBack()}
+          onError={(message) => setError(message || null)}
+        />
+
         <Pressable
           onPress={() => navigation.navigate('Login')}
           accessibilityRole="button"
@@ -201,6 +214,22 @@ const styles = StyleSheet.create({
     color: colors.cream,
     fontWeight: '800',
     fontSize: 16,
+  },
+  dividerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginTop: spacing.lg,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: colors.border,
+  },
+  dividerText: {
+    color: colors.muted,
+    fontSize: 13,
+    fontWeight: '600',
   },
   link: {
     marginTop: spacing.lg,

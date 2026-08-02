@@ -33,12 +33,26 @@ Edit `.env` and replace placeholder secrets. **Never commit `.env`.**
 | `JWT_REFRESH_SECRET` | Refresh token HMAC secret |
 | `CORS_ORIGIN` | Allowed browser/mobile origin(s), comma-separated |
 | `EXPO_PUBLIC_API_URL` | Mobile public API base (gateway only) |
+| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Google Web OAuth client (auth-service) |
+| `EXPO_PUBLIC_GOOGLE_CLIENT_ID` | Same Web client ID for Expo (public) |
 
 Generate strong JWT secrets, for example:
 
 ```bash
 openssl rand -base64 64
 ```
+
+### Google Sign-In credentials
+
+After downloading `client_secret_*.json` from Google Cloud, load it into `.env`:
+
+```powershell
+powershell -File scripts/load-google-credentials.ps1
+# or
+powershell -File scripts/load-google-credentials.ps1 -JsonPath "C:\Users\you\Downloads\client_secret_....json"
+```
+
+Add your Google account under **OAuth → Target audience → Test users**. Restart `docker compose` / auth-service after updating `.env`.
 
 ## 2. Install each project independently
 
