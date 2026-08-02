@@ -63,10 +63,24 @@ Clients should call the **gateway** paths under `/api/auth/*`. See [Auth API](..
 | `JWT_ACCESS_EXPIRES_IN` | `15m` | Access TTL |
 | `JWT_REFRESH_EXPIRES_IN` | `7d` | Refresh TTL |
 | `BCRYPT_ROUNDS` | `12` | Hash cost |
+| `SEED_DEMO_USER` | seeded unless `false` | Disable the dev demo account |
+| `DEMO_USER_EMAIL` | `demo@bivvy.test` | Demo account email (non-production) |
+| `DEMO_USER_PASSWORD` | `BivvyDemo123` | Demo account password (non-production) |
 | `GOOGLE_CLIENT_ID` | — | Web OAuth client ID (ID token audience) |
 | `GOOGLE_CLIENT_SECRET` | — | Web OAuth client secret (server-side only; not required for ID token verify) |
 | `DATABASE_URL` | Compose URL | Planned Postgres adapter |
 | `REDIS_URL` | Compose URL | Planned refresh store |
+
+## Demo account (development only)
+
+Outside production, startup seeds a ready-to-use account so the mobile app can sign in without registering:
+
+| Field | Value |
+|-------|-------|
+| Email | `demo@bivvy.test` |
+| Password | `BivvyDemo123` |
+
+Override with `DEMO_USER_EMAIL` / `DEMO_USER_PASSWORD`, or disable with `SEED_DEMO_USER=false`. The seed never runs when `NODE_ENV=production`, and these are **not** real credentials.
 
 ## Local commands
 

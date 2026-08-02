@@ -66,6 +66,16 @@ The Web client alone only covers Expo web. Google sign-in **on a device** also n
 
 Copy each generated client ID into `EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID` / `EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID`. Until then, the Google button reports that the platform client is missing and email sign-up still works.
 
+### Demo login (development)
+
+The auth service seeds a demo account outside production so you can sign in immediately:
+
+| Email | Password |
+|-------|----------|
+| `demo@bivvy.test` | `BivvyDemo123` |
+
+Disable it with `SEED_DEMO_USER=false`. See [Auth Service](./services/auth-service.md).
+
 ## 2. Install each project independently
 
 There is **no** root `npm install`.

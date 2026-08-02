@@ -4,6 +4,7 @@ const express = require('express');
 const helmet = require('helmet');
 const { applySanitization } = require('./shared/security');
 const { InMemoryUserRepository } = require('./infrastructure/persistence/InMemoryUserRepository');
+const { seedDemoUser } = require('./infrastructure/persistence/seedDemoUser');
 const { BcryptPasswordHasher } = require('./infrastructure/security/BcryptPasswordHasher');
 const { JwtTokenService } = require('./infrastructure/security/JwtTokenService');
 const { GoogleIdTokenVerifier } = require('./infrastructure/security/GoogleIdTokenVerifier');
@@ -40,6 +41,12 @@ function createApp(overrides = {}) {
     refreshSession,
     loginWithGoogle,
   });
+
+  if (overrides.seedDemoUser !== false) {
+    seedDemoUser({ userRepository, passwordHasher }).catch((err) => {
+      console.warn(`Demo user seed skipped: ${err.message}`);
+    });
+  }
 
   const app = express();
   app.disable('x-powered-by');

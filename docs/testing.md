@@ -86,7 +86,7 @@ mobile/
 | Package | Suites (Bootstrap) |
 |---------|--------------------|
 | api-gateway | Health + 404 |
-| auth-service | Register/Login unit + register/login integration |
+| auth-service | Register/Login/Google unit + register/login/demo-seed integration |
 | core-service | ListNearYou unit + gear/listings integration |
 | mobile | `CategoryChips`, `ModeToggle`, `ListingCard`, `useListings`, `ListingDetailScreen`, `RegisterScreen`, `AuthContext` |
 
