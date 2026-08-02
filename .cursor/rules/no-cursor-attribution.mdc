@@ -1,0 +1,10 @@
+---
+description: Never attribute commits or PRs to Cursor/CursorAgent
+alwaysApply: true
+---
+
+# No Cursor git attribution
+
+- Never add `Co-authored-by: Cursor`, `Co-authored-by: cursoragent@cursor.com`, `Made-with: Cursor`, or any similar trailer to commits or PRs.
+- Author and committer must remain `Luana Zenha <eng.luanazenha@gmail.com>` for this repository.
+- If the environment injects a Cursor trailer after `git commit`, strip it with `git commit --amend` before pushing (only when the commit has not been pushed, or after an explicit force-push request).
