@@ -1,0 +1,29 @@
+{
+  "expo": {
+    "name": "Bivvy",
+    "slug": "bivvy",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0B1F17"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.bivvy.app"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0B1F17"
+      },
+      "package": "com.bivvy.app"
+    },
+    "extra": {
+      "apiUrl": "${EXPO_PUBLIC_API_URL}"
+    }
+  }
+}
