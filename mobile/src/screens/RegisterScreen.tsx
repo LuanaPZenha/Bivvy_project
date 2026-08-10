@@ -1,8 +1,7 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   View,
   Text,
-  TextInput,
   Pressable,
   StyleSheet,
   KeyboardAvoidingView,
@@ -13,51 +12,66 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../auth/AuthContext';
+import { Checkbox } from '../components/Checkbox';
+import { FormField } from '../components/FormField';
+import { PasswordStrengthMeter } from '../components/PasswordStrengthMeter';
 import { PineLogo } from '../components/PineLogo';
+import {
+  formatPhone,
+  normalizePhone,
+  validateRegisterForm,
+  type RegisterFormErrors,
+} from '../utils/validation';
 import { colors, radii, spacing } from '../theme/tokens';
 import type { RegisterScreenProps } from '../navigation/types';
-
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export function RegisterScreen({ navigation }: RegisterScreenProps) {
   const insets = useSafeAreaInsets();
   const { register } = useAuth();
+
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [marketingOptIn, setMarketingOptIn] = useState(false);
+
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [errors, setErrors] = useState<RegisterFormErrors>({});
+  const [formError, setFormError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+
+  const values = useMemo(
+    () => ({ name, email, phone, password, confirmPassword, acceptedTerms }),
+    [name, email, phone, password, confirmPassword, acceptedTerms],
+  );
 
   const closeAuth = () => navigation.getParent()?.goBack();
 
-  const onSubmit = async () => {
-    setError(null);
+  const clearFieldError = (field: keyof RegisterFormErrors) => {
+    setErrors((prev) => (prev[field] ? { ...prev, [field]: undefined } : prev));
+  };
 
-    if (!email.trim() || !password) {
-      setError('Email and password are required');
-      return;
-    }
-    if (!EMAIL_PATTERN.test(email.trim())) {
-      setError('Enter a valid email address');
-      return;
-    }
-    if (password.length < 8) {
-      setError('Password must be at least 8 characters');
-      return;
-    }
-    if (password !== confirmPassword) {
-      setError('Passwords do not match');
-      return;
-    }
+  const onSubmit = async () => {
+    setFormError(null);
+    const nextErrors = validateRegisterForm(values);
+    setErrors(nextErrors);
+    if (Object.values(nextErrors).some(Boolean)) return;
 
     setBusy(true);
     try {
-      await register(email, password, name || undefined);
+      await register({
+        email: email.trim(),
+        password,
+        name: name.trim(),
+        phone: phone ? normalizePhone(phone) : undefined,
+        acceptTerms: true,
+        marketingOptIn,
+      });
       closeAuth();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unable to create account');
+      setFormError(err instanceof Error ? err.message : 'Unable to create account');
     } finally {
       setBusy(false);
     }
@@ -92,69 +106,109 @@ export function RegisterScreen({ navigation }: RegisterScreenProps) {
           Rent and buy gear for camping, hiking, climbing, water, snow, and bikes.
         </Text>
 
-        <Text style={styles.label}>Name</Text>
-        <TextInput
-          style={styles.input}
+        <FormField
+          label="Full name"
           value={name}
-          onChangeText={setName}
-          placeholder="Alex"
-          placeholderTextColor={colors.muted}
+          onChangeText={(v) => {
+            setName(v);
+            clearFieldError('name');
+          }}
+          placeholder="Alex Rivera"
           autoCapitalize="words"
-          accessibilityLabel="Name"
+          autoComplete="name"
+          textContentType="name"
+          returnKeyType="next"
+          error={errors.name}
         />
 
-        <Text style={styles.label}>Email</Text>
-        <TextInput
-          style={styles.input}
-          autoCapitalize="none"
-          keyboardType="email-address"
-          autoCorrect={false}
+        <FormField
+          label="Email"
           value={email}
-          onChangeText={setEmail}
+          onChangeText={(v) => {
+            setEmail(v);
+            clearFieldError('email');
+          }}
           placeholder="you@example.com"
-          placeholderTextColor={colors.muted}
-          accessibilityLabel="Email"
+          keyboardType="email-address"
+          autoCapitalize="none"
+          autoCorrect={false}
+          autoComplete="email"
+          textContentType="emailAddress"
+          returnKeyType="next"
+          error={errors.email}
         />
 
-        <Text style={styles.label}>Password</Text>
-        <View style={styles.passwordRow}>
-          <TextInput
-            style={styles.passwordInput}
-            secureTextEntry={!showPassword}
-            value={password}
-            onChangeText={setPassword}
-            placeholder="At least 8 characters"
-            placeholderTextColor={colors.muted}
-            accessibilityLabel="Password"
-          />
-          <Pressable
-            onPress={() => setShowPassword((v) => !v)}
-            accessibilityRole="button"
-            accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}
-            hitSlop={10}
-          >
-            <Ionicons
-              name={showPassword ? 'eye-off-outline' : 'eye-outline'}
-              size={20}
-              color={colors.muted}
-            />
-          </Pressable>
-        </View>
+        <FormField
+          label="Phone (optional)"
+          value={phone}
+          onChangeText={(v) => {
+            setPhone(formatPhone(v));
+            clearFieldError('phone');
+          }}
+          placeholder="(206) 555-0134"
+          keyboardType="phone-pad"
+          autoComplete="tel"
+          textContentType="telephoneNumber"
+          error={errors.phone}
+          hint="Owners use it to coordinate pickup"
+        />
 
-        <Text style={styles.label}>Confirm password</Text>
-        <TextInput
-          style={styles.input}
+        <FormField
+          label="Password"
+          value={password}
+          onChangeText={(v) => {
+            setPassword(v);
+            clearFieldError('password');
+          }}
+          placeholder="At least 8 characters"
           secureTextEntry={!showPassword}
+          autoCapitalize="none"
+          autoComplete="new-password"
+          textContentType="newPassword"
+          onToggleSecure={() => setShowPassword((v) => !v)}
+          secureVisible={showPassword}
+          error={errors.password}
+        />
+        <PasswordStrengthMeter password={password} />
+
+        <FormField
+          label="Confirm password"
           value={confirmPassword}
-          onChangeText={setConfirmPassword}
+          onChangeText={(v) => {
+            setConfirmPassword(v);
+            clearFieldError('confirmPassword');
+          }}
           placeholder="Repeat your password"
-          placeholderTextColor={colors.muted}
-          accessibilityLabel="Confirm password"
+          secureTextEntry={!showPassword}
+          autoCapitalize="none"
+          autoComplete="new-password"
+          textContentType="newPassword"
+          returnKeyType="done"
+          onSubmitEditing={onSubmit}
+          error={errors.confirmPassword}
         />
 
-        {error ? (
-          <Text style={styles.error} accessibilityRole="alert">
-            {error}
+        <Checkbox
+          checked={acceptedTerms}
+          onChange={(next) => {
+            setAcceptedTerms(next);
+            clearFieldError('acceptedTerms');
+          }}
+          label="I agree to the Bivvy Terms of Service and Privacy Policy."
+          accessibilityLabel="Accept terms"
+          error={errors.acceptedTerms}
+        />
+
+        <Checkbox
+          checked={marketingOptIn}
+          onChange={setMarketingOptIn}
+          label="Send me gear drops and local rental deals."
+          accessibilityLabel="Marketing emails"
+        />
+
+        {formError ? (
+          <Text style={styles.formError} accessibilityRole="alert">
+            {formError}
           </Text>
         ) : null}
 
@@ -171,10 +225,6 @@ export function RegisterScreen({ navigation }: RegisterScreenProps) {
             <Text style={styles.ctaText}>Create account</Text>
           )}
         </Pressable>
-
-        <Text style={styles.terms}>
-          By creating an account you agree to the Bivvy Terms of Service and Privacy Policy.
-        </Text>
 
         <Pressable
           onPress={() => navigation.navigate('Login')}
@@ -222,41 +272,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
     lineHeight: 21,
   },
-  label: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: colors.ink,
-    marginBottom: 6,
-  },
-  input: {
-    backgroundColor: colors.creamCard,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radii.md,
-    paddingHorizontal: 14,
-    height: 48,
-    marginBottom: spacing.md,
-    color: colors.ink,
-    fontSize: 15,
-  },
-  passwordRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.creamCard,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radii.md,
-    paddingHorizontal: 14,
-    height: 48,
-    marginBottom: spacing.md,
-    gap: 10,
-  },
-  passwordInput: {
-    flex: 1,
-    color: colors.ink,
-    fontSize: 15,
-  },
-  error: {
+  formError: {
     color: colors.danger,
     marginBottom: spacing.md,
     fontSize: 14,
@@ -275,13 +291,6 @@ const styles = StyleSheet.create({
     color: colors.cream,
     fontWeight: '800',
     fontSize: 16,
-  },
-  terms: {
-    marginTop: spacing.md,
-    fontSize: 12,
-    lineHeight: 18,
-    color: colors.muted,
-    textAlign: 'center',
   },
   link: {
     marginTop: spacing.lg,

@@ -14,15 +14,19 @@ Create a user account and receive tokens.
 {
   "email": "hiker@example.com",
   "password": "StrongPass1!",
-  "name": "Alex"
+  "name": "Alex",
+  "phone": "2065550134",
+  "acceptTerms": true
 }
 ```
 
 | Field | Required | Rules |
 |-------|----------|-------|
 | `email` | Yes | Valid email; stored lowercased |
-| `password` | Yes | Minimum 8 characters |
+| `password` | Yes | Minimum 8 characters, with letters and numbers |
+| `acceptTerms` | Yes | Must be `true`; stored as `acceptedTermsAt` |
 | `name` | No | Defaults to email local-part |
+| `phone` | No | 10–15 digits; punctuation stripped before storage |
 
 ### Responses
 
@@ -34,6 +38,8 @@ Create a user account and receive tokens.
     "id": "uuid",
     "email": "hiker@example.com",
     "name": "Alex",
+    "phone": "2065550134",
+    "acceptedTermsAt": "2026-08-02T00:00:00.000Z",
     "createdAt": "2026-08-02T00:00:00.000Z"
   },
   "accessToken": "<jwt>",
@@ -45,8 +51,11 @@ Create a user account and receive tokens.
 
 | Status | Error message | When |
 |--------|---------------|------|
-| 400 | `Password must be at least 8 characters` | Weak password |
+| 400 | `Password must be at least 8 characters` | Short password |
+| 400 | `Password must include letters and numbers` | Weak password |
+| 400 | `You must accept the Terms of Service` | `acceptTerms` not `true` |
 | 400 | `Invalid email` | Malformed email |
+| 400 | `Invalid phone number` | Phone outside 10–15 digits |
 | 409 | `Email already registered` | Duplicate email |
 
 ---

@@ -23,7 +23,8 @@ mobile/
     auth/AuthContext.tsx
     navigation/          # Root stack, tabs, explore + auth stacks
     screens/             # Home, ListingDetail, Login, Register, Profile
-    components/          # HomeHeader, ModeToggle, CategoryChips, ProBanner, ListingCard, PineLogo
+    components/          # HomeHeader, ModeToggle, CategoryChips, ProBanner, ListingCard, FormField, Checkbox, PasswordStrengthMeter, PineLogo
+    utils/validation.ts  # Email/phone/password rules shared by forms
     hooks/useListings.ts
     services/api.ts
     security/            # SecureStore session + pinning hook
@@ -46,7 +47,7 @@ mobile/
 |--------|--------|-------------|
 | Home (Explore) | Current | Forest header, Rent/Buy toggle, categories, Pro banner, Near You list |
 | Listing detail | Current | Mode-aware price, owner/rating, description, Coming soon CTA |
-| Register (auth entry) | Current | Email/password sign-up with validation, confirm password, show/hide, terms note |
+| Register (auth entry) | Current | Full name, email, optional phone, password + strength meter, confirm, terms checkbox, marketing opt-in |
 | Login | Current | Email/password sign-in (dev demo account: `demo@bivvy.test` / `BivvyDemo123`) |
 | Profile | Current | Guest or signed-in card; stub rows for rentals/saved/listings |
 

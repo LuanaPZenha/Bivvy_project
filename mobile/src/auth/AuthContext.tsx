@@ -6,7 +6,12 @@ import {
   saveTokens,
   saveUser,
 } from '../security/secureCredentials';
-import { googleLoginRequest, loginRequest, registerRequest } from '../services/api';
+import {
+  googleLoginRequest,
+  loginRequest,
+  registerRequest,
+  type RegisterPayload,
+} from '../services/api';
 import type { AuthUser } from '../types/user';
 
 type AuthContextValue = {
@@ -14,7 +19,7 @@ type AuthContextValue = {
   isLoading: boolean;
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string, name?: string) => Promise<void>;
+  register: (payload: RegisterPayload) => Promise<void>;
   loginWithGoogle: (idToken: string) => Promise<void>;
   logout: () => Promise<void>;
 };
@@ -60,8 +65,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 
   const register = useCallback(
-    async (email: string, password: string, name?: string) => {
-      const res = await registerRequest(email.trim(), password, name?.trim());
+    async (payload: RegisterPayload) => {
+      const res = await registerRequest({
+        ...payload,
+        email: payload.email.trim(),
+        name: payload.name?.trim(),
+      });
       await persistSession(res.accessToken, res.refreshToken, res.user);
     },
     [persistSession],

@@ -67,6 +67,7 @@ mobile/
     components/
     hooks/
     screens/
+    utils/
 ```
 
 - Use `@testing-library/react-native`.
@@ -88,6 +89,6 @@ mobile/
 | api-gateway | Health + 404 |
 | auth-service | Register/Login/Google unit + register/login/demo-seed integration |
 | core-service | ListNearYou unit + gear/listings integration |
-| mobile | `CategoryChips`, `ModeToggle`, `ListingCard`, `useListings`, `ListingDetailScreen`, `RegisterScreen`, `AuthContext` |
+| mobile | `CategoryChips`, `ModeToggle`, `ListingCard`, `useListings`, `ListingDetailScreen`, `RegisterScreen`, `validation` utils, `AuthContext` |
 
 Expand coverage as features land; do not delete the mandatory folders.

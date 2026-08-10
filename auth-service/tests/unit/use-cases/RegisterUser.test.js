@@ -32,23 +32,59 @@ describe('RegisterUser use case', () => {
       email: 'hiker@example.com',
       password: 'securePass1',
       name: 'Alex',
+      phone: '(206) 555-0134',
+      acceptTerms: true,
     });
 
     expect(result.user.email).toBe('hiker@example.com');
+    expect(result.user.phone).toBe('2065550134');
+    expect(result.user.acceptedTermsAt).toBeInstanceOf(Date);
     expect(result.accessToken).toBe('access');
     expect(result.user.passwordHash).toBeUndefined();
   });
 
-  it('rejects short passwords', async () => {
-    const useCase = new RegisterUser({
+  function makeUseCase() {
+    return new RegisterUser({
       userRepository: new InMemoryUserRepository(),
       passwordHasher: hasher,
       tokenService,
     });
+  }
 
-    await expect(useCase.execute({ email: 'a@b.com', password: 'short' })).rejects.toThrow(
-      /at least 8/,
-    );
+  it('rejects short passwords', async () => {
+    await expect(
+      makeUseCase().execute({ email: 'a@b.com', password: 'short', acceptTerms: true }),
+    ).rejects.toThrow(/at least 8/);
+  });
+
+  it('requires letters and numbers in the password', async () => {
+    await expect(
+      makeUseCase().execute({ email: 'a@b.com', password: 'onlyletters', acceptTerms: true }),
+    ).rejects.toThrow(/letters and numbers/);
+  });
+
+  it('requires accepting the terms', async () => {
+    await expect(
+      makeUseCase().execute({ email: 'a@b.com', password: 'securePass1' }),
+    ).rejects.toThrow(/Terms of Service/);
+  });
+
+  it('rejects an invalid phone number', async () => {
+    await expect(
+      makeUseCase().execute({
+        email: 'a@b.com',
+        password: 'securePass1',
+        phone: '123',
+        acceptTerms: true,
+      }),
+    ).rejects.toThrow(/Invalid phone/);
+  });
+
+  it('rejects duplicate emails', async () => {
+    const useCase = makeUseCase();
+    const payload = { email: 'dupe@example.com', password: 'securePass1', acceptTerms: true };
+    await useCase.execute(payload);
+    await expect(useCase.execute(payload)).rejects.toThrow(/already registered/);
   });
 });
 

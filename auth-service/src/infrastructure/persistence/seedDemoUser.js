@@ -28,6 +28,7 @@ async function seedDemoUser({ userRepository, passwordHasher, logger = console }
       email,
       passwordHash,
       name: process.env.DEMO_USER_NAME || DEFAULT_NAME,
+      acceptedTermsAt: new Date(),
     }),
   );
 

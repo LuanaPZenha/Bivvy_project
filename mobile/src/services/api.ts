@@ -45,14 +45,19 @@ export async function loginRequest(email: string, password: string): Promise<Aut
   });
 }
 
-export async function registerRequest(
-  email: string,
-  password: string,
-  name?: string,
-): Promise<AuthTokensResponse> {
+export type RegisterPayload = {
+  email: string;
+  password: string;
+  name?: string;
+  phone?: string;
+  acceptTerms: boolean;
+  marketingOptIn?: boolean;
+};
+
+export async function registerRequest(payload: RegisterPayload): Promise<AuthTokensResponse> {
   return apiRequest<AuthTokensResponse>('/api/auth/register', {
     method: 'POST',
-    body: { email, password, name },
+    body: payload,
   });
 }
 

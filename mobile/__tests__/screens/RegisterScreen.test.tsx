@@ -10,7 +10,11 @@ jest.mock('../../src/auth/AuthContext', () => ({
 }));
 
 function renderScreen() {
-  const navigation = { navigate: jest.fn(), goBack: jest.fn(), getParent: () => ({ goBack: jest.fn() }) };
+  const navigation = {
+    navigate: jest.fn(),
+    goBack: jest.fn(),
+    getParent: () => ({ goBack: jest.fn() }),
+  };
   const utils = render(
     <SafeAreaProvider
       initialMetrics={{
@@ -24,44 +28,82 @@ function renderScreen() {
   return { ...utils, navigation };
 }
 
+function fillValidForm(getByLabelText: ReturnType<typeof renderScreen>['getByLabelText']) {
+  fireEvent.changeText(getByLabelText('Full name'), 'Alex Rivera');
+  fireEvent.changeText(getByLabelText('Email'), 'hiker@example.com');
+  fireEvent.changeText(getByLabelText('Password'), 'StrongPass1');
+  fireEvent.changeText(getByLabelText('Confirm password'), 'StrongPass1');
+  fireEvent.press(getByLabelText('Accept terms'));
+}
+
 describe('RegisterScreen', () => {
   beforeEach(() => jest.clearAllMocks());
 
-  it('validates email format before calling register', async () => {
+  it('reports per-field errors on empty submit', async () => {
     const { getByLabelText, getByText } = renderScreen();
 
+    fireEvent.press(getByLabelText('Create account'));
+
+    await waitFor(() => expect(getByText('Enter your name')).toBeTruthy());
+    expect(getByText('Enter your email')).toBeTruthy();
+    expect(getByText('Create a password')).toBeTruthy();
+    expect(getByText('Accept the Terms to continue')).toBeTruthy();
+    expect(mockRegister).not.toHaveBeenCalled();
+  });
+
+  it('validates email, password match, and phone', async () => {
+    const { getByLabelText, getByText } = renderScreen();
+
+    fireEvent.changeText(getByLabelText('Full name'), 'Alex Rivera');
     fireEvent.changeText(getByLabelText('Email'), 'not-an-email');
-    fireEvent.changeText(getByLabelText('Password'), 'StrongPass1!');
+    fireEvent.changeText(getByLabelText('Phone (optional)'), '123');
+    fireEvent.changeText(getByLabelText('Password'), 'StrongPass1');
+    fireEvent.changeText(getByLabelText('Confirm password'), 'Different1');
+    fireEvent.press(getByLabelText('Accept terms'));
     fireEvent.press(getByLabelText('Create account'));
 
     await waitFor(() => expect(getByText('Enter a valid email address')).toBeTruthy());
+    expect(getByText('Enter a valid phone number')).toBeTruthy();
+    expect(getByText('Passwords do not match')).toBeTruthy();
     expect(mockRegister).not.toHaveBeenCalled();
   });
 
-  it('requires matching passwords', async () => {
-    const { getByLabelText, getByText } = renderScreen();
+  it('formats the phone number as digits are typed', () => {
+    const { getByLabelText } = renderScreen();
+    const phone = getByLabelText('Phone (optional)');
 
-    fireEvent.changeText(getByLabelText('Email'), 'hiker@example.com');
-    fireEvent.changeText(getByLabelText('Password'), 'StrongPass1!');
-    fireEvent.changeText(getByLabelText('Confirm password'), 'Different1!');
-    fireEvent.press(getByLabelText('Create account'));
+    fireEvent.changeText(phone, '2065550134');
 
-    await waitFor(() => expect(getByText('Passwords do not match')).toBeTruthy());
-    expect(mockRegister).not.toHaveBeenCalled();
+    expect(phone.props.value).toBe('(206) 555-0134');
   });
 
-  it('registers with valid input', async () => {
+  it('submits normalized values when the form is valid', async () => {
     mockRegister.mockResolvedValue(undefined);
     const { getByLabelText } = renderScreen();
 
-    fireEvent.changeText(getByLabelText('Name'), 'Alex');
-    fireEvent.changeText(getByLabelText('Email'), 'hiker@example.com');
-    fireEvent.changeText(getByLabelText('Password'), 'StrongPass1!');
-    fireEvent.changeText(getByLabelText('Confirm password'), 'StrongPass1!');
+    fillValidForm(getByLabelText);
+    fireEvent.changeText(getByLabelText('Phone (optional)'), '2065550134');
     fireEvent.press(getByLabelText('Create account'));
 
     await waitFor(() =>
-      expect(mockRegister).toHaveBeenCalledWith('hiker@example.com', 'StrongPass1!', 'Alex'),
+      expect(mockRegister).toHaveBeenCalledWith({
+        email: 'hiker@example.com',
+        password: 'StrongPass1',
+        name: 'Alex Rivera',
+        phone: '2065550134',
+        acceptTerms: true,
+        marketingOptIn: false,
+      }),
     );
+  });
+
+  it('surfaces API errors', async () => {
+    mockRegister.mockRejectedValue(new Error('Email already registered'));
+    const { getByLabelText, getByText } = renderScreen();
+
+    fillValidForm(getByLabelText);
+    fireEvent.press(getByLabelText('Create account'));
+
+    await waitFor(() => expect(getByText('Email already registered')).toBeTruthy());
   });
 });

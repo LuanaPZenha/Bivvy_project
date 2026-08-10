@@ -11,7 +11,7 @@ Authentication and session token issuance for Bivvy. Built with DDD + Clean Arch
 
 ## Responsibilities
 
-- Register users with bcrypt-hashed passwords.
+- Register users with bcrypt-hashed passwords, optional phone, and recorded Terms acceptance.
 - Login and issue access JWT + opaque refresh tokens.
 - Google Sign-In via ID token verification (find-or-create / account link by email).
 - Rotate refresh tokens.
@@ -24,6 +24,7 @@ auth-service/src/
   domain/
     entities/User.js
     value-objects/Email.js
+    value-objects/Phone.js
     repositories/IUserRepository.js
   application/use-cases/
     RegisterUser.js

@@ -16,7 +16,9 @@ describe('Auth routes integration', () => {
     const email = `user_${Date.now()}@bivvy.test`;
     const password = 'StrongPass1!';
 
-    const reg = await request(app).post('/auth/register').send({ email, password, name: 'Jordan' });
+    const reg = await request(app)
+      .post('/auth/register')
+      .send({ email, password, name: 'Jordan', phone: '2065550134', acceptTerms: true });
 
     expect(reg.status).toBe(201);
     expect(reg.body.accessToken).toBeDefined();
@@ -31,8 +33,16 @@ describe('Auth routes integration', () => {
   it('rejects weak password on register', async () => {
     const res = await request(app)
       .post('/auth/register')
-      .send({ email: 'weak@bivvy.test', password: '123' });
+      .send({ email: 'weak@bivvy.test', password: '123', acceptTerms: true });
     expect(res.status).toBe(400);
+  });
+
+  it('rejects register without accepting terms', async () => {
+    const res = await request(app)
+      .post('/auth/register')
+      .send({ email: 'noterms@bivvy.test', password: 'StrongPass1' });
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/Terms of Service/);
   });
 
   it('POST /auth/google with mocked verifier returns tokens', async () => {
