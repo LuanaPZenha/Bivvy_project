@@ -97,7 +97,7 @@ Details: [Mobile Security](./mobile/security.md).
 - [ ] TLS everywhere (no cleartext API)
 - [ ] Rotate JWT secrets via a secrets manager
 - [ ] Redis-backed refresh tokens with TTL
-- [ ] Postgres adapters replacing in-memory repos
+- [x] Postgres adapter for auth users (Core still in memory)
 - [ ] Certificate pinning on release builds
 - [ ] WAF / cloud rate limits in front of the gateway
 - [ ] Structured audit logs for auth events (no secrets)

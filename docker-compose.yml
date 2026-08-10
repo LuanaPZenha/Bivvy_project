@@ -39,6 +39,7 @@ services:
       BCRYPT_ROUNDS: 12
       DATABASE_URL: ${AUTH_DATABASE_URL:-postgresql://bivvy:bivvy@postgres:5432/bivvy_auth}
       REDIS_URL: ${REDIS_URL:-redis://redis:6379}
+      # Users live in Postgres; the in-memory adapter is only used when DATABASE_URL is unset.
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
       SEED_DEMO_USER: ${SEED_DEMO_USER:-true}

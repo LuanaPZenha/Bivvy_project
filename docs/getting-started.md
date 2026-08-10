@@ -115,7 +115,7 @@ docker compose up --build
 | Postgres | `localhost:5432` |
 | Redis | `localhost:6379` |
 
-> **Note (Bootstrap):** Auth and Core currently use **in-memory** repositories for speed of scaffolding. Compose already provisions Postgres/Redis for the next persistence iteration.
+> **Note:** Auth stores users in **Postgres** (`bivvy_auth`) — accounts survive restarts under Compose. Core listings and refresh tokens are still **in-memory** (Bootstrap).
 
 ## 5. Start the mobile app
 

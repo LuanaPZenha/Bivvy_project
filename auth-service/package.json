@@ -8,6 +8,7 @@
     "start": "node src/server.js",
     "dev": "node --watch src/server.js",
     "test": "jest --runInBand --forceExit",
+    "test:db": "jest --runInBand --forceExit --testPathPattern=postgres",
     "test:unit": "jest --testPathPattern=unit --runInBand",
     "test:integration": "jest --testPathPattern=integration --runInBand --forceExit",
     "lint": "eslint . --ext .js"
@@ -20,6 +21,7 @@
     "google-auth-library": "^11.0.0",
     "helmet": "^8.0.0",
     "jsonwebtoken": "^9.0.2",
+    "pg": "^8.23.0",
     "uuid": "^11.0.3"
   },
   "devDependencies": {

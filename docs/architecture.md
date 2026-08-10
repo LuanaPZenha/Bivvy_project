@@ -99,7 +99,7 @@ Dependency rule: **inward only**. Domain must not import Express, Helmet, or SQL
 | `LoginUser` | Verify credentials, issue tokens |
 | `RefreshSession` | Rotate refresh token, issue new pair |
 
-Persistence today: **in-memory** `InMemoryUserRepository`. Compose Postgres is ready for the next adapter.
+Persistence today: **Postgres** via `PostgresUserRepository` (`bivvy_auth`), with `InMemoryUserRepository` as the fallback when `DATABASE_URL` is unset (tests and quick local runs).
 
 ### Core domain (Current / Bootstrap)
 

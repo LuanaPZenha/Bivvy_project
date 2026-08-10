@@ -48,7 +48,7 @@ mobile/
 | Home (Explore) | Current | Forest header, Rent/Buy toggle, categories, Pro banner, Near You list |
 | Listing detail | Current | Mode-aware price, owner/rating, description, Coming soon CTA |
 | Register (auth entry) | Current | Full name, email, optional phone, password + strength meter, confirm, terms checkbox, marketing opt-in |
-| Login | Current | Email/password sign-in (dev demo account: `demo@bivvy.test` / `BivvyDemo123`) |
+| Login | Current | Email/password sign-in with per-field validation and show/hide (dev demo account: `demo@bivvy.test` / `BivvyDemo123`) |
 | Profile | Current | Guest or signed-in card; stub rows for rentals/saved/listings |
 
 ## Data today

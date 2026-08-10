@@ -87,8 +87,8 @@ mobile/
 | Package | Suites (Bootstrap) |
 |---------|--------------------|
 | api-gateway | Health + 404 |
-| auth-service | Register/Login/Google unit + register/login/demo-seed integration |
+| auth-service | Register/Login/Google unit + register/login/demo-seed integration + Postgres repository (opt-in) |
 | core-service | ListNearYou unit + gear/listings integration |
-| mobile | `CategoryChips`, `ModeToggle`, `ListingCard`, `useListings`, `ListingDetailScreen`, `RegisterScreen`, `validation` utils, `AuthContext` |
+| mobile | `CategoryChips`, `ModeToggle`, `ListingCard`, `useListings`, `ListingDetailScreen`, `RegisterScreen`, `LoginScreen`, `validation` utils, `AuthContext` |
 
 Expand coverage as features land; do not delete the mandatory folders.

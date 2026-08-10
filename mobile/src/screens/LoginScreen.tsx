@@ -2,38 +2,66 @@ import React, { useState } from 'react';
 import {
   View,
   Text,
-  TextInput,
   Pressable,
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
+  ScrollView,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../auth/AuthContext';
+import { FormField } from '../components/FormField';
+import { PineLogo } from '../components/PineLogo';
+import { isValidEmail } from '../utils/validation';
 import { colors, radii, spacing } from '../theme/tokens';
 import type { LoginScreenProps } from '../navigation/types';
+
+type FieldErrors = {
+  email?: string;
+  password?: string;
+};
 
 export function LoginScreen({ navigation }: LoginScreenProps) {
   const insets = useSafeAreaInsets();
   const { login } = useAuth();
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [errors, setErrors] = useState<FieldErrors>({});
+  const [formError, setFormError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
+  const closeAuth = () => navigation.getParent()?.goBack();
+
+  const clearFieldError = (field: keyof FieldErrors) => {
+    setErrors((prev) => (prev[field] ? { ...prev, [field]: undefined } : prev));
+  };
+
   const onSubmit = async () => {
-    setError(null);
-    if (!email.trim() || !password) {
-      setError('Email and password are required');
-      return;
+    setFormError(null);
+
+    const nextErrors: FieldErrors = {};
+    if (!email.trim()) {
+      nextErrors.email = 'Enter your email';
+    } else if (!isValidEmail(email)) {
+      nextErrors.email = 'Enter a valid email address';
     }
+    if (!password) {
+      nextErrors.password = 'Enter your password';
+    }
+
+    setErrors(nextErrors);
+    if (Object.values(nextErrors).some(Boolean)) return;
+
     setBusy(true);
     try {
       await login(email, password);
-      navigation.getParent()?.goBack();
+      closeAuth();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unable to sign in');
+      setFormError(err instanceof Error ? err.message : 'Unable to sign in');
     } finally {
       setBusy(false);
     }
@@ -41,69 +69,95 @@ export function LoginScreen({ navigation }: LoginScreenProps) {
 
   return (
     <KeyboardAvoidingView
-      style={[styles.root, { paddingTop: insets.top + spacing.lg, paddingBottom: insets.bottom }]}
+      style={[styles.root, { paddingTop: insets.top + spacing.md }]}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <Pressable
-        onPress={() => navigation.getParent()?.goBack()}
-        accessibilityRole="button"
-        accessibilityLabel="Close"
-        style={styles.close}
+      <ScrollView
+        contentContainerStyle={{ paddingBottom: insets.bottom + spacing.xl }}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.closeText}>Close</Text>
-      </Pressable>
+        <Pressable
+          onPress={closeAuth}
+          accessibilityRole="button"
+          accessibilityLabel="Close"
+          style={styles.close}
+        >
+          <Ionicons name="close" size={24} color={colors.muted} />
+        </Pressable>
 
-      <Text style={styles.brand}>BIVVY</Text>
-      <Text style={styles.title}>Welcome back</Text>
-      <Text style={styles.subtitle}>Sign in to rent or buy outdoor gear near you.</Text>
+        <View style={styles.brandRow}>
+          <PineLogo />
+          <Text style={styles.brand}>BIVVY</Text>
+        </View>
 
-      <Text style={styles.label}>Email</Text>
-      <TextInput
-        style={styles.input}
-        autoCapitalize="none"
-        keyboardType="email-address"
-        autoCorrect={false}
-        value={email}
-        onChangeText={setEmail}
-        placeholder="you@example.com"
-        placeholderTextColor={colors.muted}
-        accessibilityLabel="Email"
-      />
+        <Text style={styles.title}>Welcome back</Text>
+        <Text style={styles.subtitle}>Sign in to rent or buy outdoor gear near you.</Text>
 
-      <Text style={styles.label}>Password</Text>
-      <TextInput
-        style={styles.input}
-        secureTextEntry
-        value={password}
-        onChangeText={setPassword}
-        placeholder="Your password"
-        placeholderTextColor={colors.muted}
-        accessibilityLabel="Password"
-      />
+        <FormField
+          label="Email"
+          value={email}
+          onChangeText={(v) => {
+            setEmail(v);
+            clearFieldError('email');
+          }}
+          placeholder="you@example.com"
+          keyboardType="email-address"
+          autoCapitalize="none"
+          autoCorrect={false}
+          autoComplete="email"
+          textContentType="emailAddress"
+          returnKeyType="next"
+          error={errors.email}
+        />
 
-      {error ? (
-        <Text style={styles.error} accessibilityRole="alert">
-          {error}
-        </Text>
-      ) : null}
+        <FormField
+          label="Password"
+          value={password}
+          onChangeText={(v) => {
+            setPassword(v);
+            clearFieldError('password');
+          }}
+          placeholder="Your password"
+          secureTextEntry={!showPassword}
+          autoCapitalize="none"
+          autoComplete="current-password"
+          textContentType="password"
+          returnKeyType="done"
+          onSubmitEditing={onSubmit}
+          onToggleSecure={() => setShowPassword((v) => !v)}
+          secureVisible={showPassword}
+          error={errors.password}
+        />
 
-      <Pressable
-        style={[styles.cta, busy && styles.ctaDisabled]}
-        onPress={onSubmit}
-        disabled={busy}
-        accessibilityRole="button"
-        accessibilityLabel="Sign in"
-      >
-        {busy ? <ActivityIndicator color={colors.cream} /> : <Text style={styles.ctaText}>Sign in</Text>}
-      </Pressable>
+        {formError ? (
+          <Text style={styles.formError} accessibilityRole="alert">
+            {formError}
+          </Text>
+        ) : null}
 
-      <Pressable
-        onPress={() => navigation.navigate('Register')}
-        accessibilityRole="button"
-        accessibilityLabel="Create an account"
-      >
-        <Text style={styles.link}>New to Bivvy? Create an account</Text>
-      </Pressable>
+        <Pressable
+          style={[styles.cta, busy && styles.ctaDisabled]}
+          onPress={onSubmit}
+          disabled={busy}
+          accessibilityRole="button"
+          accessibilityLabel="Sign in"
+        >
+          {busy ? (
+            <ActivityIndicator color={colors.cream} />
+          ) : (
+            <Text style={styles.ctaText}>Sign in</Text>
+          )}
+        </Pressable>
+
+        <Pressable
+          onPress={() => navigation.navigate('Register')}
+          accessibilityRole="button"
+          accessibilityLabel="Create an account"
+        >
+          <Text style={styles.link}>New to Bivvy? Create an account</Text>
+        </Pressable>
+      </ScrollView>
     </KeyboardAvoidingView>
   );
 }
@@ -116,18 +170,19 @@ const styles = StyleSheet.create({
   },
   close: {
     alignSelf: 'flex-end',
-    marginBottom: spacing.md,
+    marginBottom: spacing.sm,
   },
-  closeText: {
-    color: colors.muted,
-    fontWeight: '600',
+  brandRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: spacing.md,
   },
   brand: {
     fontSize: 18,
     fontWeight: '800',
     letterSpacing: 2,
     color: colors.forest,
-    marginBottom: spacing.sm,
   },
   title: {
     fontSize: 28,
@@ -141,24 +196,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
     lineHeight: 21,
   },
-  label: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: colors.ink,
-    marginBottom: 6,
-  },
-  input: {
-    backgroundColor: colors.creamCard,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radii.md,
-    paddingHorizontal: 14,
-    height: 48,
-    marginBottom: spacing.md,
-    color: colors.ink,
-    fontSize: 15,
-  },
-  error: {
+  formError: {
     color: colors.danger,
     marginBottom: spacing.md,
     fontSize: 14,
@@ -178,22 +216,6 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     fontSize: 16,
   },
-  dividerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    marginTop: spacing.lg,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: colors.border,
-  },
-  dividerText: {
-    color: colors.muted,
-    fontSize: 13,
-    fontWeight: '600',
-  },
   link: {
     marginTop: spacing.lg,
     textAlign: 'center',
@@ -201,4 +223,3 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 });
-
