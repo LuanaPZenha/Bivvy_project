@@ -1,7 +1,8 @@
 import React from 'react';
-import { View, Text, StyleSheet, Pressable } from 'react-native';
+import { View, Text, StyleSheet, Pressable, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Listing, listingPriceLabel } from '../types/listing';
+import { primaryListingImageUrl } from '../utils/listingImages';
 import { colors, radii, spacing } from '../theme/tokens';
 
 type Props = {
@@ -30,6 +31,7 @@ function categoryIcon(category: Listing['category']): keyof typeof Ionicons.glyp
 
 export function ListingCard({ listing, onPress }: Props) {
   const thumbBg = listing.thumbnailTone === 'forest' ? colors.forestMid : '#6B4F3A';
+  const imageUri = primaryListingImageUrl(listing);
 
   return (
     <Pressable
@@ -39,7 +41,11 @@ export function ListingCard({ listing, onPress }: Props) {
       accessibilityLabel={listing.title}
     >
       <View style={[styles.thumb, { backgroundColor: thumbBg }]}>
-        <Ionicons name={categoryIcon(listing.category)} size={36} color={colors.cream} />
+        {imageUri ? (
+          <Image source={{ uri: imageUri }} style={styles.thumbImage} resizeMode="cover" />
+        ) : (
+          <Ionicons name={categoryIcon(listing.category)} size={36} color={colors.cream} />
+        )}
         {listing.isPro ? (
           <View style={styles.proBadge}>
             <Text style={styles.proText}>PRO</Text>
@@ -101,6 +107,12 @@ const styles = StyleSheet.create({
     width: 110,
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  thumbImage: {
+    width: '100%',
+    height: '100%',
+    minHeight: 110,
   },
   proBadge: {
     position: 'absolute',

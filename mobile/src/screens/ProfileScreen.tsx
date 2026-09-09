@@ -60,6 +60,11 @@ export function ProfileScreen() {
 
       <View style={styles.section}>
         <NavRow
+          icon="cart-outline"
+          label="Cart"
+          onPress={() => rootNav.navigate('Cart')}
+        />
+        <NavRow
           icon="calendar-outline"
           label="My rentals"
           onPress={() => openProtected('MyRentals')}

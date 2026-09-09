@@ -3,6 +3,10 @@ node_modules/
 .pnp
 .pnp.js
 
+# Uploaded listing images (local disk store)
+uploads/
+**/uploads/
+
 # Environment & secrets — NEVER commit
 .env
 .env.*

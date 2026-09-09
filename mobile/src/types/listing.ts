@@ -9,6 +9,15 @@ export type GearCategory =
   | 'snow'
   | 'bikes';
 
+export type ListingImage = {
+  id: string;
+  filename?: string;
+  contentType?: string;
+  size?: number;
+  createdAt?: string;
+  url?: string;
+};
+
 export type Listing = {
   id: string;
   title: string;
@@ -27,6 +36,7 @@ export type Listing = {
   thumbnailTone: 'forest' | 'brown';
   description: string;
   blockedDates?: string[];
+  images?: ListingImage[];
 };
 
 export type BookingStatus =
@@ -126,6 +136,24 @@ export function normalizeListing(raw: unknown): Listing {
     description: String(item.description || ''),
     blockedDates: Array.isArray(item.blockedDates)
       ? item.blockedDates.map((d) => String(d))
+      : [],
+    images: Array.isArray(item.images)
+      ? item.images
+          .map((img) => {
+            if (!img || typeof img !== 'object') return null;
+            const row = img as Record<string, unknown>;
+            const id = row.id != null ? String(row.id) : '';
+            if (!id) return null;
+            return {
+              id,
+              filename: row.filename != null ? String(row.filename) : undefined,
+              contentType: row.contentType != null ? String(row.contentType) : undefined,
+              size: row.size == null ? undefined : Number(row.size),
+              createdAt: row.createdAt != null ? String(row.createdAt) : undefined,
+              url: row.url != null ? String(row.url) : undefined,
+            };
+          })
+          .filter(Boolean) as ListingImage[]
       : [],
   };
 }

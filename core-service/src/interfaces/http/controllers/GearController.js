@@ -103,6 +103,59 @@ class GearController {
       next(err);
     }
   };
+
+  listImages = async (req, res, next) => {
+    try {
+      res.json(await this.getListingImage.list({ listingId: req.params.id }));
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  getImageBinary = async (req, res, next) => {
+    try {
+      const { buffer, contentType } = await this.getListingImage.getBinary({
+        listingId: req.params.id,
+        imageId: req.params.imageId,
+      });
+      res.setHeader('Content-Type', contentType || 'application/octet-stream');
+      res.setHeader('Cache-Control', 'public, max-age=86400');
+      res.send(buffer);
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  addImage = async (req, res, next) => {
+    try {
+      if (!req.file) {
+        const err = new Error('image file is required (field name: image)');
+        err.status = 400;
+        throw err;
+      }
+      const result = await this.addListingImage.execute(
+        {
+          listingId: req.params.id,
+          buffer: req.file.buffer,
+          contentType: req.file.mimetype,
+          size: req.file.size,
+        },
+        req.actor || {},
+      );
+      res.status(201).json(result);
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  checkoutCartHandler = async (req, res, next) => {
+    try {
+      const result = await this.checkoutCart.execute(req.body, req.actor || {});
+      res.status(201).json(result);
+    } catch (err) {
+      next(err);
+    }
+  };
 }
 
 module.exports = { GearController };

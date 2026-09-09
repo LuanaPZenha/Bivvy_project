@@ -21,7 +21,7 @@ Implemented in `api-gateway`:
 | Secure headers | Helmet (`x-powered-by` disabled) |
 | CORS | Allowlist via `CORS_ORIGIN` (comma-separated) |
 | Rate limiting | `express-rate-limit` (window/max from env) |
-| Body size limit | `express.json({ limit: '100kb' })` |
+| Body size limit | JSON: `express.json({ limit: '100kb' })` on the gateway; multipart listing uploads stream through without JSON parsing (core enforces `UPLOAD_MAX_BYTES`, default 5 MB, JPEG/PNG/WebP only) |
 | NoSQL injection hygiene | `express-mongo-sanitize` |
 | XSS scrubbing | String scrub on JSON body fields |
 | Auth gate | Bearer JWT required for `/api/listings` |

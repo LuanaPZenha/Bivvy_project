@@ -24,7 +24,13 @@ All **public** HTTP traffic goes through the API Gateway. Mobile and third parti
 | `POST` | `/api/auth/login` | No | Auth `/auth/login` |
 | `POST` | `/api/auth/refresh` | No* | Auth `/auth/refresh` |
 | `GET` | `/api/gear/near` | No | Core `/gear/near` |
+| `GET` | `/api/gear/:id` | No | Core `/gear/:id` |
+| `GET` | `/api/gear/:id/images` | No | Core image metadata |
+| `GET` | `/api/gear/:id/images/:imageId` | No | Core image binary |
 | `POST` | `/api/listings` | **Yes** | Core `/listings` |
+| `POST` | `/api/listings/:id/images` | **Yes** | Core multipart upload |
+| `POST` | `/api/bookings` | **Yes** | Core `/bookings` |
+| `POST` | `/api/cart/checkout` | **Yes** | Core `/cart/checkout` |
 
 \*Refresh does not use the access token; it requires a valid `refreshToken` in the body.
 

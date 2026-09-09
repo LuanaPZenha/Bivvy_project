@@ -18,8 +18,11 @@ CREATE TABLE IF NOT EXISTS listings (
   thumbnail_tone TEXT NOT NULL DEFAULT 'forest',
   description TEXT NOT NULL DEFAULT '',
   blocked_dates JSONB NOT NULL DEFAULT '[]'::jsonb,
+  images JSONB NOT NULL DEFAULT '[]'::jsonb,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+ALTER TABLE listings ADD COLUMN IF NOT EXISTS images JSONB NOT NULL DEFAULT '[]'::jsonb;
 
 CREATE INDEX IF NOT EXISTS idx_listings_category ON listings (category);
 CREATE INDEX IF NOT EXISTS idx_listings_mode ON listings (mode);

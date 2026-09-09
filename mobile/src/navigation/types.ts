@@ -24,6 +24,7 @@ export type RootStackParamList = {
   Auth: NavigatorScreenParams<AuthStackParamList>;
   MyRentals: undefined;
   MyListings: undefined;
+  Cart: undefined;
 };
 
 export type HomeScreenProps = CompositeScreenProps<
@@ -40,6 +41,7 @@ export type BookingRequestScreenProps = NativeStackScreenProps<
 
 export type MyRentalsScreenProps = NativeStackScreenProps<RootStackParamList, 'MyRentals'>;
 export type MyListingsScreenProps = NativeStackScreenProps<RootStackParamList, 'MyListings'>;
+export type CartScreenProps = NativeStackScreenProps<RootStackParamList, 'Cart'>;
 
 export type LoginScreenProps = NativeStackScreenProps<AuthStackParamList, 'Login'>;
 export type RegisterScreenProps = NativeStackScreenProps<AuthStackParamList, 'Register'>;

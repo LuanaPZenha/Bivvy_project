@@ -52,11 +52,13 @@ Bivvy is an outdoor adventure gear rental and resale marketplace. This folder is
 |------|--------|
 | API Gateway (proxy + edge security) | Current (bookings proxy + identity headers) |
 | Auth (register / login / Google / refresh / me + roles) | Current (Postgres users; refresh tokens in memory) |
-| Core listings (near you / detail / create / mine) | Current (in-memory seed; Postgres adapter when `DATABASE_URL` reachable) |
+| Core listings (near you / detail / create / mine / images) | Current (local upload store; Postgres adapter when `DATABASE_URL` reachable) |
 | Bookings (quote / request / list / status / checkout sim) | Current |
-| Mobile explore + detail + booking request | Current (live API with offline catalog fallback) |
-| Owner / renter profile slices | Current (My listings + My rentals) |
+| Cart checkout (multi buy requests) | Current |
+| Mobile explore + detail + booking + cart + photos | Current (live API with offline catalog fallback) |
+| Owner / renter profile slices | Current (My listings + photo upload + My rentals) |
 | Redis refresh store | Planned |
 | Message broker | Planned (not implemented) |
+| Real payment processor | Planned (checkout uses `bivvy_sim`) |
 
 When you change behavior, update the matching docs in the same change. See [DOCUMENTATION.md](./DOCUMENTATION.md).

@@ -10,13 +10,16 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
+  Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import * as ImagePicker from 'expo-image-picker';
 import { useAuth } from '../auth/AuthContext';
 import { FormField } from '../components/FormField';
-import { createListingRequest, fetchMyListings } from '../services/api';
+import { createListingRequest, fetchMyListings, uploadListingImage } from '../services/api';
 import { CATEGORIES, Listing, MarketMode, listingPriceLabel } from '../types/listing';
+import { primaryListingImageUrl } from '../utils/listingImages';
 import { DEFAULT_SEATTLE_ZIP, SEATTLE_ZIPS } from '../data/seattleZips';
 import { colors, radii, spacing } from '../theme/tokens';
 import type { MyListingsScreenProps } from '../navigation/types';
@@ -50,6 +53,7 @@ export function MyListingsScreen({ navigation }: MyListingsScreenProps) {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
+  const [uploadingId, setUploadingId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     if (!isAuthenticated) {
@@ -112,6 +116,33 @@ export function MyListingsScreen({ navigation }: MyListingsScreenProps) {
       setFormError(err instanceof Error ? err.message : 'Unable to create listing');
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const onAddPhoto = async (listing: Listing) => {
+    try {
+      const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!permission.granted) {
+        Alert.alert('Permission needed', 'Allow photo library access to upload listing images.');
+        return;
+      }
+      const picked = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        quality: 0.85,
+        allowsMultipleSelection: false,
+      });
+      if (picked.canceled || !picked.assets?.[0]?.uri) return;
+      const asset = picked.assets[0];
+      setUploadingId(listing.id);
+      await uploadListingImage(listing.id, asset.uri, {
+        mimeType: asset.mimeType || 'image/jpeg',
+        fileName: asset.fileName || `listing-${listing.id}.jpg`,
+      });
+      await load();
+    } catch (err) {
+      Alert.alert('Upload failed', err instanceof Error ? err.message : 'Unable to upload photo');
+    } finally {
+      setUploadingId(null);
     }
   };
 
@@ -276,22 +307,55 @@ export function MyListingsScreen({ navigation }: MyListingsScreenProps) {
               <Text style={styles.emptyBody}>Tap + to list gear for rent or sale.</Text>
             </View>
           ) : (
-            listings.map((listing) => (
-              <View key={listing.id} style={styles.card} accessibilityLabel={listing.title}>
-                <Text style={styles.cardTitle}>{listing.title}</Text>
-                <Text style={styles.cardMeta}>
-                  {listing.mode === 'rent' ? 'For rent' : 'For sale'} · {listingPriceLabel(listing)}
-                </Text>
-                <Text style={styles.cardMeta}>
-                  {listing.location || listing.zipCode || 'Seattle'} · {listing.category}
-                </Text>
-                {listing.description ? (
-                  <Text style={styles.cardDesc} numberOfLines={3}>
-                    {listing.description}
-                  </Text>
-                ) : null}
-              </View>
-            ))
+            listings.map((listing) => {
+              const uri = primaryListingImageUrl(listing);
+              return (
+                <View key={listing.id} style={styles.card} accessibilityLabel={listing.title}>
+                  <View style={styles.cardHeader}>
+                    <View style={styles.cardThumb}>
+                      {uri ? (
+                        <Image source={{ uri }} style={styles.cardThumbImg} resizeMode="cover" />
+                      ) : (
+                        <Ionicons name="cube-outline" size={28} color={colors.cream} />
+                      )}
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.cardTitle}>{listing.title}</Text>
+                      <Text style={styles.cardMeta}>
+                        {listing.mode === 'rent' ? 'For rent' : 'For sale'} ·{' '}
+                        {listingPriceLabel(listing)}
+                      </Text>
+                      <Text style={styles.cardMeta}>
+                        {listing.location || listing.zipCode || 'Seattle'} · {listing.category}
+                      </Text>
+                    </View>
+                  </View>
+                  {listing.description ? (
+                    <Text style={styles.cardDesc} numberOfLines={3}>
+                      {listing.description}
+                    </Text>
+                  ) : null}
+                  <Pressable
+                    style={styles.photoBtn}
+                    onPress={() => onAddPhoto(listing)}
+                    disabled={uploadingId === listing.id}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Add photo to ${listing.title}`}
+                  >
+                    {uploadingId === listing.id ? (
+                      <ActivityIndicator color={colors.forest} />
+                    ) : (
+                      <>
+                        <Ionicons name="camera-outline" size={18} color={colors.forest} />
+                        <Text style={styles.photoBtnText}>
+                          {(listing.images?.length || 0) > 0 ? 'Add another photo' : 'Add photo'}
+                        </Text>
+                      </>
+                    )}
+                  </Pressable>
+                </View>
+              );
+            })
           )}
         </ScrollView>
       )}
@@ -398,8 +462,23 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     padding: spacing.md,
     marginBottom: spacing.md,
-    gap: 4,
+    gap: 8,
   },
+  cardHeader: {
+    flexDirection: 'row',
+    gap: 12,
+    alignItems: 'center',
+  },
+  cardThumb: {
+    width: 64,
+    height: 64,
+    borderRadius: radii.md,
+    backgroundColor: colors.forestMid,
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  cardThumbImg: { width: '100%', height: '100%' },
   cardTitle: {
     fontSize: 16,
     fontWeight: '800',
@@ -414,6 +493,24 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.muted,
     lineHeight: 20,
+  },
+  photoBtn: {
+    marginTop: 4,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    alignSelf: 'flex-start',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: radii.pill,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.cream,
+  },
+  photoBtnText: {
+    color: colors.forest,
+    fontWeight: '700',
+    fontSize: 13,
   },
   primaryBtn: {
     marginTop: spacing.sm,

@@ -10,6 +10,27 @@ const ALLOWED_CATEGORIES = new Set([
 ]);
 const ALLOWED_MODES = new Set(['rent', 'buy']);
 const ALLOWED_TONES = new Set(['forest', 'brown']);
+const MAX_IMAGES = 5;
+
+function normalizeImages(raw) {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .slice(0, MAX_IMAGES)
+    .map((item) => {
+      if (!item || typeof item !== 'object') return null;
+      const id = item.id != null ? String(item.id) : '';
+      const filename = item.filename != null ? String(item.filename) : '';
+      if (!id || !filename) return null;
+      return {
+        id,
+        filename,
+        contentType: String(item.contentType || 'image/jpeg'),
+        size: Number(item.size) || 0,
+        createdAt: item.createdAt ? String(item.createdAt) : new Date().toISOString(),
+      };
+    })
+    .filter(Boolean);
+}
 
 class Listing {
   constructor({
@@ -32,6 +53,7 @@ class Listing {
     thumbnailTone = 'forest',
     description = '',
     blockedDates = [],
+    images = [],
   }) {
     if (!title || !String(title).trim()) {
       throw clientError('Listing requires a title');
@@ -83,6 +105,7 @@ class Listing {
     this.thumbnailTone = ALLOWED_TONES.has(thumbnailTone) ? thumbnailTone : 'forest';
     this.description = description || '';
     this.blockedDates = Array.isArray(blockedDates) ? [...blockedDates] : [];
+    this.images = normalizeImages(images);
   }
 
   toJSON() {
@@ -106,6 +129,7 @@ class Listing {
       thumbnailTone: this.thumbnailTone,
       description: this.description,
       blockedDates: this.blockedDates,
+      images: this.images,
     };
   }
 
@@ -120,4 +144,4 @@ function clientError(message) {
   return err;
 }
 
-module.exports = { Listing, ALLOWED_CATEGORIES, ALLOWED_MODES };
+module.exports = { Listing, ALLOWED_CATEGORIES, ALLOWED_MODES, normalizeImages, MAX_IMAGES };

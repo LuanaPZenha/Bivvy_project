@@ -11,6 +11,8 @@ type Props = {
   onSearchChange: (value: string) => void;
   onFilterPress?: () => void;
   onLocationPress?: () => void;
+  onCartPress?: () => void;
+  cartCount?: number;
 };
 
 export function HomeHeader({
@@ -19,6 +21,8 @@ export function HomeHeader({
   onSearchChange,
   onFilterPress,
   onLocationPress,
+  onCartPress,
+  cartCount = 0,
 }: Props) {
   const insets = useSafeAreaInsets();
 
@@ -29,12 +33,29 @@ export function HomeHeader({
           <PineLogo />
           <Text style={styles.brandName}>BIVVY</Text>
         </View>
-        <Pressable accessibilityRole="button" accessibilityLabel="Notifications" hitSlop={12}>
-          <View>
-            <Ionicons name="notifications-outline" size={24} color={colors.cream} />
-            <View style={styles.badge} />
-          </View>
-        </Pressable>
+        <View style={styles.topActions}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={cartCount ? `Cart, ${cartCount} items` : 'Cart'}
+            hitSlop={12}
+            onPress={onCartPress}
+          >
+            <View>
+              <Ionicons name="cart-outline" size={24} color={colors.cream} />
+              {cartCount > 0 ? (
+                <View style={styles.cartBadge}>
+                  <Text style={styles.cartBadgeText}>{cartCount > 9 ? '9+' : String(cartCount)}</Text>
+                </View>
+              ) : null}
+            </View>
+          </Pressable>
+          <Pressable accessibilityRole="button" accessibilityLabel="Notifications" hitSlop={12}>
+            <View>
+              <Ionicons name="notifications-outline" size={24} color={colors.cream} />
+              <View style={styles.badge} />
+            </View>
+          </Pressable>
+        </View>
       </View>
 
       <Pressable
@@ -99,6 +120,11 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     letterSpacing: 1.5,
   },
+  topActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+  },
   badge: {
     position: 'absolute',
     top: 0,
@@ -107,6 +133,23 @@ const styles = StyleSheet.create({
     height: 8,
     borderRadius: 4,
     backgroundColor: colors.danger,
+  },
+  cartBadge: {
+    position: 'absolute',
+    top: -4,
+    right: -8,
+    minWidth: 16,
+    height: 16,
+    borderRadius: 8,
+    paddingHorizontal: 3,
+    backgroundColor: colors.gold,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cartBadgeText: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: colors.forest,
   },
   locationRow: {
     flexDirection: 'row',

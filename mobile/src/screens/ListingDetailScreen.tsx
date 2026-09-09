@@ -1,9 +1,21 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, ActivityIndicator } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  Pressable,
+  ActivityIndicator,
+  Image,
+  Alert,
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { fetchListingById } from '../services/api';
 import { Listing, MOCK_LISTINGS, listingPriceLabel } from '../types/listing';
+import { primaryListingImageUrl } from '../utils/listingImages';
+import { useCart } from '../cart/CartContext';
+import { useRootNavigation } from '../navigation/useRootNavigation';
 import { colors, radii, spacing } from '../theme/tokens';
 import type { ListingDetailScreenProps } from '../navigation/types';
 
@@ -12,6 +24,8 @@ export function ListingDetailScreen({ navigation, route }: ListingDetailScreenPr
   const listingId = route.params.listingId;
   const [listing, setListing] = useState<Listing | null>(null);
   const [loading, setLoading] = useState(true);
+  const { addItem, hasItem } = useCart();
+  const rootNav = useRootNavigation();
 
   useEffect(() => {
     const parent = navigation.getParent();
@@ -66,16 +80,33 @@ export function ListingDetailScreen({ navigation, route }: ListingDetailScreenPr
     );
   }
 
-  const ctaLabel = listing.mode === 'rent' ? 'Request rental' : 'Buy';
   const thumbBg = listing.thumbnailTone === 'forest' ? colors.forestMid : '#6B4F3A';
+  const imageUri = primaryListingImageUrl(listing);
+  const inCart = hasItem(listing.id);
 
-  const onCta = () => {
+  const onRent = () => {
     navigation.navigate('BookingRequest', { listingId: listing.id });
+  };
+
+  const onBuyNow = () => {
+    navigation.navigate('BookingRequest', { listingId: listing.id });
+  };
+
+  const onAddToCart = () => {
+    const result = addItem(listing);
+    if (!result.ok) {
+      Alert.alert('Cannot add to cart', result.error);
+      return;
+    }
+    Alert.alert('Added to cart', listing.title, [
+      { text: 'Keep browsing', style: 'cancel' },
+      { text: 'View cart', onPress: () => rootNav.navigate('Cart') },
+    ]);
   };
 
   return (
     <View style={styles.root}>
-      <ScrollView contentContainerStyle={{ paddingBottom: insets.bottom + 100 }}>
+      <ScrollView contentContainerStyle={{ paddingBottom: insets.bottom + 140 }}>
         <View style={[styles.hero, { backgroundColor: thumbBg, paddingTop: insets.top + spacing.sm }]}>
           <Pressable
             style={styles.backBtn}
@@ -85,7 +116,11 @@ export function ListingDetailScreen({ navigation, route }: ListingDetailScreenPr
           >
             <Ionicons name="chevron-back" size={22} color={colors.cream} />
           </Pressable>
-          <Ionicons name="cube-outline" size={72} color={colors.cream} />
+          {imageUri ? (
+            <Image source={{ uri: imageUri }} style={styles.heroImage} resizeMode="cover" />
+          ) : (
+            <Ionicons name="cube-outline" size={72} color={colors.cream} />
+          )}
           {listing.isPro ? (
             <View style={styles.proBadge}>
               <Text style={styles.proText}>PRO</Text>
@@ -117,14 +152,35 @@ export function ListingDetailScreen({ navigation, route }: ListingDetailScreenPr
       </ScrollView>
 
       <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, spacing.md) }]}>
-        <Pressable
-          style={styles.cta}
-          onPress={onCta}
-          accessibilityRole="button"
-          accessibilityLabel={ctaLabel}
-        >
-          <Text style={styles.ctaText}>{ctaLabel}</Text>
-        </Pressable>
+        {listing.mode === 'rent' ? (
+          <Pressable
+            style={styles.cta}
+            onPress={onRent}
+            accessibilityRole="button"
+            accessibilityLabel="Request rental"
+          >
+            <Text style={styles.ctaText}>Request rental</Text>
+          </Pressable>
+        ) : (
+          <View style={styles.ctaRow}>
+            <Pressable
+              style={[styles.ctaSecondary, { flex: 1 }]}
+              onPress={onBuyNow}
+              accessibilityRole="button"
+              accessibilityLabel="Buy now"
+            >
+              <Text style={styles.ctaSecondaryText}>Buy now</Text>
+            </Pressable>
+            <Pressable
+              style={[styles.cta, { flex: 1.2 }]}
+              onPress={onAddToCart}
+              accessibilityRole="button"
+              accessibilityLabel={inCart ? 'Already in cart' : 'Add to cart'}
+            >
+              <Text style={styles.ctaText}>{inCart ? 'In cart' : 'Add to cart'}</Text>
+            </Pressable>
+          </View>
+        )}
       </View>
     </View>
   );
@@ -153,11 +209,18 @@ const styles = StyleSheet.create({
     minHeight: 240,
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  heroImage: {
+    ...StyleSheet.absoluteFillObject,
+    width: '100%',
+    height: '100%',
   },
   backBtn: {
     position: 'absolute',
     top: 52,
     left: spacing.md,
+    zIndex: 2,
     width: 40,
     height: 40,
     borderRadius: 20,
@@ -169,6 +232,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 56,
     right: spacing.md,
+    zIndex: 2,
     backgroundColor: colors.gold,
     paddingHorizontal: 8,
     paddingVertical: 4,
@@ -266,6 +330,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     // Ensure web pointer clicks hit the CTA above the ScrollView.
     cursor: 'pointer' as const,
+  },
+  ctaRow: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  ctaSecondary: {
+    borderRadius: radii.md,
+    paddingVertical: 16,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.creamCard,
+    cursor: 'pointer' as const,
+  },
+  ctaSecondaryText: {
+    color: colors.ink,
+    fontSize: 16,
+    fontWeight: '800',
   },
   ctaText: {
     color: colors.cream,

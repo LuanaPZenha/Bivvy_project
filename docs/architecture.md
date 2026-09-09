@@ -112,8 +112,10 @@ JWT claims include `sub`, `email`, `role` (`renter` \| `owner` \| `both`), and `
 | `ListNearYou` | Filter by category / mode / query / ZIP / distance |
 | `GetListingById` | Fetch a single listing |
 | `CreateListing` / `ListOwnerListings` | Owner create and list |
+| `AddListingImage` / `GetListingImage` | Owner upload + public image read |
 | `QuoteBooking` | Transparent rental/buy price breakdown |
 | `CreateBooking` / `ListBookings` / `UpdateBookingStatus` | Booking lifecycle |
+| `CheckoutCart` | Multi-item buy booking requests |
 | `SimulateCheckout` | Simulated payment for accepted bookings |
 
 Persistence: **in-memory** seed (10 Seattle listings) by default; **Postgres** adapters when `DATABASE_URL` is reachable (`USE_IN_MEMORY=1` forces memory).

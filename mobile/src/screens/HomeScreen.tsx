@@ -7,6 +7,8 @@ import { ModeToggle } from '../components/ModeToggle';
 import { ProBanner } from '../components/ProBanner';
 import { ListingCard } from '../components/ListingCard';
 import { useListings } from '../hooks/useListings';
+import { useCart } from '../cart/CartContext';
+import { useRootNavigation } from '../navigation/useRootNavigation';
 import { labelForZip, nextSeattleZip } from '../data/seattleZips';
 import { colors, spacing } from '../theme/tokens';
 import type { HomeScreenProps } from '../navigation/types';
@@ -27,6 +29,8 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
     usingFallback,
     reload,
   } = useListings();
+  const { count: cartCount } = useCart();
+  const rootNav = useRootNavigation();
 
   const locationLabel = labelForZip(zipCode);
 
@@ -38,6 +42,8 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
         searchValue={query}
         onSearchChange={setQuery}
         onLocationPress={() => setZipCode(nextSeattleZip(zipCode))}
+        onCartPress={() => rootNav.navigate('Cart')}
+        cartCount={cartCount}
       />
       <ScrollView
         style={styles.scroll}

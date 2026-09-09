@@ -75,9 +75,9 @@ class PostgresListingRepository {
       `INSERT INTO listings (
         id, title, category, mode, price_per_day, buy_price, distance_miles, rating, review_count,
         owner_name, owner_id, is_pro, location, zip_code, latitude, longitude, thumbnail_tone,
-        description, blocked_dates
+        description, blocked_dates, images
       ) VALUES (
-        $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19::jsonb
+        $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19::jsonb,$20::jsonb
       )
       ON CONFLICT (id) DO UPDATE SET
         title = EXCLUDED.title,
@@ -97,7 +97,8 @@ class PostgresListingRepository {
         longitude = EXCLUDED.longitude,
         thumbnail_tone = EXCLUDED.thumbnail_tone,
         description = EXCLUDED.description,
-        blocked_dates = EXCLUDED.blocked_dates`,
+        blocked_dates = EXCLUDED.blocked_dates,
+        images = EXCLUDED.images`,
       [
         entity.id,
         entity.title,
@@ -118,6 +119,7 @@ class PostgresListingRepository {
         entity.thumbnailTone,
         entity.description,
         JSON.stringify(entity.blockedDates || []),
+        JSON.stringify(entity.images || []),
       ],
     );
     return entity;
@@ -147,6 +149,7 @@ function mapListing(row) {
     blockedDates: Array.isArray(row.blocked_dates)
       ? row.blocked_dates
       : JSON.parse(row.blocked_dates || '[]'),
+    images: Array.isArray(row.images) ? row.images : JSON.parse(row.images || '[]'),
   });
 }
 

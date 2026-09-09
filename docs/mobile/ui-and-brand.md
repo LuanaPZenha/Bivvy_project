@@ -27,20 +27,20 @@ Defined in `mobile/src/theme/tokens.ts`:
 
 ## Explore composition (Current)
 
-1. **Header (forest)** — logo + `BIVVY`, notification bell, “Picking up near **{Seattle ZIP label}**” (tap cycles ZIPs), search field, gold filter button.
+1. **Header (forest)** — logo + `BIVVY`, cart icon (badge), notification bell, “Picking up near **{Seattle ZIP label}**” (tap cycles ZIPs), search field, gold filter button.
 2. **Offline banner** — shown when Near You falls back to mock data; tap retries the API.
 3. **Rent \| Buy toggle** — filters listings by market mode.
 4. **Category chips** — `All gear`, `Camping`, `Hiking`, `Climbing`, `Water`, `Snow`, `Bikes`.
 5. **Bivvy Pro banner** — insured premium listings CTA + `Upgrade`.
-6. **Near You** — listing cards with thumbnail, owner, stars, `$ / day` or buy price, miles; tap opens detail.
+6. **Near You** — listing cards with photo (or tone placeholder), owner, stars, `$ / day` or buy price, miles; tap opens detail.
 
 ## Detail, booking & profile
 
-- Detail CTA labels: **Request rental** / **Buy** — navigate to Booking request (quote + submit).
-- Profile rows: **My rentals**, **My listings** (auth required).
+- Detail CTA labels: **Request rental** / **Buy now** + **Add to cart**.
+- Profile rows: **Cart**, **My rentals**, **My listings** (auth required for rentals/listings).
+- My listings supports **Add photo**.
 - Auth copy stays English; errors surface gateway messages when available.
 - Register is the default auth entry (email/password). The Google button component exists but is not mounted yet — device sign-in still needs native OAuth clients.
-
 ## Copy examples (English)
 
 - Search placeholder: `Search tents, kayaks, skis...`

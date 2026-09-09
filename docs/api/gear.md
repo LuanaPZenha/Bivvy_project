@@ -39,7 +39,16 @@ Return nearby gear listings. **Public** (no JWT).
       "location": "Fremont, Seattle",
       "zipCode": "98103",
       "thumbnailTone": "forest",
-      "description": "Roomy blackout tent…"
+      "description": "Roomy blackout tent…",
+      "images": [
+        {
+          "id": "8f3c…",
+          "filename": "8f3c….png",
+          "contentType": "image/png",
+          "size": 120,
+          "createdAt": "2026-09-09T12:00:00.000Z"
+        }
+      ]
     }
   ]
 }
@@ -50,6 +59,34 @@ Return nearby gear listings. **Public** (no JWT).
 ## GET `/api/gear/:id`
 
 Return a single listing. **Public**. Returns **404** when unknown.
+
+---
+
+## GET `/api/gear/:id/images`
+
+List image metadata for a listing. **Public**.
+
+```json
+{
+  "listingId": "lst_tent_1",
+  "count": 1,
+  "images": [
+    {
+      "id": "8f3c…",
+      "contentType": "image/png",
+      "size": 120,
+      "createdAt": "2026-09-09T12:00:00.000Z",
+      "url": "/api/gear/lst_tent_1/images/8f3c…"
+    }
+  ]
+}
+```
+
+---
+
+## GET `/api/gear/:id/images/:imageId`
+
+Return the binary image. **Public**. `Content-Type` matches the stored MIME type.
 
 ---
 
@@ -71,12 +108,52 @@ Create a listing. **Requires** `Authorization: Bearer <accessToken>`.
 Gateway forwards `X-User-Id` / `X-User-Email` / `X-User-Role` / `X-User-Name` to Core.
 
 Rent listings require `pricePerDay`. Buy listings require `buyPrice`. Domain validation failures return **400**.
+Images are not accepted on create — upload them after publish.
+
+---
+
+## POST `/api/listings/:id/images` (JWT)
+
+Upload a product photo. **Requires JWT**. Caller must own the listing.
+
+- `Content-Type: multipart/form-data`
+- Field name: `image` (JPEG, PNG, or WebP)
+- Limits: 5 MB default (`UPLOAD_MAX_BYTES`), max 5 images per listing (`UPLOAD_MAX_PER_LISTING`)
+
+**201**
+
+```json
+{
+  "listingId": "…",
+  "image": { "id": "…", "filename": "….jpg", "contentType": "image/jpeg", "size": 245120, "createdAt": "…" },
+  "images": [ "…" ]
+}
+```
+
+Errors: **400** bad type/size, **401**, **403** not owner, **404**, **409** too many images.
 
 ---
 
 ## GET `/api/listings/mine`
 
 Listings owned by the authenticated user. **Requires JWT**.
+
+---
+
+## POST `/api/cart/checkout` (JWT)
+
+Create a **buy** booking request for each cart listing id. Does **not** charge payment — sellers still accept, then the buyer uses `POST /api/bookings/:id/checkout`.
+
+```json
+{
+  "listingIds": ["lst_draws_1", "lst_stove_1"],
+  "message": "Cart checkout"
+}
+```
+
+**201** `{ "count": 2, "bookings": [ { "booking": {…}, "listing": {…} } ] }`
+
+Rejects rent listings (**400**), empty carts (**400**), missing listings (**404**), and self-purchase (**400**).
 
 ---
 
@@ -115,4 +192,4 @@ Simulated checkout for an **accepted** booking (renter only). Marks `completed` 
 
 ## Seed data (Bootstrap)
 
-Core ships with ten Seattle-area listings (rent + buy) aligned with the mobile catalog.
+Core ships with ten Seattle-area listings (rent + buy) aligned with the mobile catalog. A few seed listings also receive tiny demo PNG photos on startup when the local upload store is empty.

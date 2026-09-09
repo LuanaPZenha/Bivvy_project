@@ -8,6 +8,7 @@ import { ListingDetailScreen } from '../screens/ListingDetailScreen';
 import { BookingRequestScreen } from '../screens/BookingRequestScreen';
 import { MyRentalsScreen } from '../screens/MyRentalsScreen';
 import { MyListingsScreen } from '../screens/MyListingsScreen';
+import { CartScreen } from '../screens/CartScreen';
 import { ProfileScreen } from '../screens/ProfileScreen';
 import { LoginScreen } from '../screens/LoginScreen';
 import { RegisterScreen } from '../screens/RegisterScreen';
@@ -94,6 +95,7 @@ export function RootNavigator() {
         />
         <RootStack.Screen name="MyRentals" component={MyRentalsScreen} />
         <RootStack.Screen name="MyListings" component={MyListingsScreen} />
+        <RootStack.Screen name="Cart" component={CartScreen} />
       </RootStack.Navigator>
     </NavigationContainer>
   );

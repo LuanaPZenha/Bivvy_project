@@ -13,8 +13,9 @@ Public HTTP edge for Bivvy. **No domain logic** — only security middleware and
 
 1. Terminate public client traffic.
 2. Enforce Helmet, CORS allowlist, rate limits, body limits, sanitization.
-3. Proxy `/api/auth` → Auth Service and `/api/gear` + `/api/listings` → Core Service.
-4. Verify JWT for protected routes (`/api/listings`).
+3. Proxy `/api/auth` → Auth Service and `/api/gear` + `/api/listings` + `/api/bookings` + `/api/cart` → Core Service.
+4. Verify JWT for protected routes (`/api/listings`, `/api/bookings`, `/api/cart`).
+5. Forward multipart listing image uploads without rewriting the body stream.
 
 ## Layout
 

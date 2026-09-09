@@ -266,3 +266,83 @@ export async function createListingRequest(payload: CreateListingPayload): Promi
   });
   return normalizeListing(raw);
 }
+
+export type UploadListingImageResponse = {
+  listingId: string;
+  image: { id: string; contentType?: string; size?: number; createdAt?: string };
+  images: unknown[];
+};
+
+export async function uploadListingImage(
+  listingId: string,
+  localUri: string,
+  options?: { mimeType?: string; fileName?: string },
+): Promise<UploadListingImageResponse> {
+  const token = await getAccessToken();
+  const form = new FormData();
+  const fileName = options?.fileName || `photo-${Date.now()}.jpg`;
+  const mimeType = options?.mimeType || 'image/jpeg';
+
+  if (typeof window !== 'undefined' && localUri.startsWith('blob:')) {
+    const blob = await fetch(localUri).then((r) => r.blob());
+    form.append('image', blob, fileName);
+  } else if (typeof window !== 'undefined' && localUri.startsWith('data:')) {
+    const blob = await fetch(localUri).then((r) => r.blob());
+    form.append('image', blob, fileName);
+  } else if (typeof window !== 'undefined') {
+    // Expo web often returns a normal https/file URL or blob URL.
+    const blob = await fetch(localUri).then((r) => r.blob());
+    form.append('image', blob, fileName);
+  } else {
+    form.append('image', {
+      uri: localUri,
+      name: fileName,
+      type: mimeType,
+    } as unknown as Blob);
+  }
+
+  const headers: Record<string, string> = {
+    Accept: 'application/json',
+  };
+  if (token) headers.Authorization = `Bearer ${token}`;
+
+  const res = await fetch(`${API_URL}/api/listings/${encodeURIComponent(listingId)}/images`, {
+    method: 'POST',
+    headers,
+    body: form,
+  });
+
+  if (!res.ok) {
+    const errBody = (await res.json().catch(() => ({}))) as { error?: string };
+    throw new Error(errBody.error || `Upload failed (${res.status})`);
+  }
+
+  return res.json() as Promise<UploadListingImageResponse>;
+}
+
+export type CartCheckoutResponse = {
+  count: number;
+  bookings: CreateBookingResponse[];
+};
+
+export async function checkoutCartRequest(body: {
+  listingIds: string[];
+  message?: string;
+}): Promise<CartCheckoutResponse> {
+  const raw = await apiRequest<{
+    count: number;
+    bookings: { booking: Booking; listing: unknown }[];
+  }>('/api/cart/checkout', {
+    method: 'POST',
+    auth: true,
+    body,
+  });
+  return {
+    count: raw.count,
+    bookings: (raw.bookings || []).map((row) => ({
+      booking: row.booking,
+      listing: normalizeListing(row.listing),
+    })),
+  };
+}
+

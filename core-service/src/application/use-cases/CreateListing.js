@@ -32,6 +32,8 @@ class CreateListing {
       thumbnailTone: input.thumbnailTone || 'forest',
       description: input.description || '',
       blockedDates: input.blockedDates || [],
+      // Images are added via POST /listings/:id/images — ignore client blobs on create.
+      images: [],
     });
     const saved = await this.listingRepository.save(listing);
     return typeof saved.toJSON === 'function' ? saved.toJSON() : saved;

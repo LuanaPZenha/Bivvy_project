@@ -7,15 +7,16 @@ const { requireAuth } = require('../middleware/auth');
 /**
  * Gateway proxy notes:
  * - Mount prefixes are stripped by Express, so the upstream prefix is prepended.
- * - express.json() drains the body stream; fixRequestBody rewrites it upstream.
+ * - express.json() drains JSON bodies; fixRequestBody rewrites them upstream.
+ * - Multipart uploads must NOT call fixRequestBody — the raw stream is forwarded.
  * - After JWT verification, identity headers are forwarded to Core.
  */
-function createServiceProxy({ target, upstreamPrefix, stripCookies = false }) {
+function createServiceProxy({ target, upstreamPrefix, stripCookies = false, timeoutMs = 15000 }) {
   return createProxyMiddleware({
     target,
     changeOrigin: true,
-    proxyTimeout: 15000,
-    timeout: 15000,
+    proxyTimeout: timeoutMs,
+    timeout: timeoutMs,
     pathRewrite: (path) => `${upstreamPrefix}${path.replace(/^\/(?=$|\?)/, '')}`,
     on: {
       proxyReq: (proxyReq, req, res) => {
@@ -25,6 +26,10 @@ function createServiceProxy({ target, upstreamPrefix, stripCookies = false }) {
           proxyReq.setHeader('x-user-email', req.user.email || '');
           proxyReq.setHeader('x-user-role', req.user.role || 'both');
           if (req.user.name) proxyReq.setHeader('x-user-name', req.user.name);
+        }
+        const contentType = String(req.headers['content-type'] || '');
+        if (contentType.includes('multipart/form-data')) {
+          return;
         }
         fixRequestBody(proxyReq, req, res);
       },
@@ -61,6 +66,7 @@ function mountProxies(app) {
     createServiceProxy({
       target: config.coreServiceUrl,
       upstreamPrefix: '/listings',
+      timeoutMs: 60000,
     }),
   );
 
@@ -70,6 +76,15 @@ function mountProxies(app) {
     createServiceProxy({
       target: config.coreServiceUrl,
       upstreamPrefix: '/bookings',
+    }),
+  );
+
+  app.use(
+    '/api/cart',
+    requireAuth,
+    createServiceProxy({
+      target: config.coreServiceUrl,
+      upstreamPrefix: '/cart',
     }),
   );
 }
