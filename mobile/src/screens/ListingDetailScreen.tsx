@@ -14,6 +14,21 @@ export function ListingDetailScreen({ navigation, route }: ListingDetailScreenPr
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const parent = navigation.getParent();
+    parent?.setOptions({ tabBarStyle: { display: 'none' } });
+    return () => {
+      parent?.setOptions({
+        tabBarStyle: {
+          backgroundColor: colors.creamCard,
+          borderTopColor: colors.border,
+          zIndex: 30,
+          elevation: 30,
+        },
+      });
+    };
+  }, [navigation]);
+
+  useEffect(() => {
     let cancelled = false;
     (async () => {
       setLoading(true);

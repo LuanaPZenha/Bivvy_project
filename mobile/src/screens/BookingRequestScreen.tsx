@@ -67,6 +67,21 @@ export function BookingRequestScreen({ navigation, route }: BookingRequestScreen
   const [formError, setFormError] = useState<string | null>(null);
 
   useEffect(() => {
+    const parent = navigation.getParent();
+    parent?.setOptions({ tabBarStyle: { display: 'none' } });
+    return () => {
+      parent?.setOptions({
+        tabBarStyle: {
+          backgroundColor: colors.creamCard,
+          borderTopColor: colors.border,
+          zIndex: 30,
+          elevation: 30,
+        },
+      });
+    };
+  }, [navigation]);
+
+  useEffect(() => {
     let cancelled = false;
     (async () => {
       setLoadingListing(true);
