@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Pressable, Text, StyleSheet } from 'react-native';
+import { View, Pressable, Text, StyleSheet, Platform } from 'react-native';
 import { MarketMode } from '../types/listing';
 import { colors, radii, spacing } from '../theme/tokens';
 
@@ -22,12 +22,21 @@ export function ModeToggle({ value, onChange }: Props) {
           <Pressable
             key={opt.id}
             onPress={() => onChange(opt.id)}
+            // RN Web + desktop automation: attach a native click handler as well.
+            {...(Platform.OS === 'web'
+              ? ({
+                  onClick: (event: { stopPropagation?: () => void }) => {
+                    event?.stopPropagation?.();
+                    onChange(opt.id);
+                  },
+                } as object)
+              : {})}
             style={[styles.option, active && styles.optionActive]}
             accessibilityRole="button"
             accessibilityState={{ selected: active }}
             accessibilityLabel={opt.label}
-            // RN Web: role=tab often swallows mouse clicks in desktop browsers.
-            // Keep a plain button role so Rent/Buy toggles reliably on web.
+            hitSlop={8}
+            testID={`mode-${opt.id}`}
           >
             <Text style={[styles.label, active && styles.labelActive]}>{opt.label}</Text>
           </Pressable>
@@ -42,11 +51,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     marginHorizontal: spacing.md,
     marginTop: spacing.md,
+    marginBottom: spacing.sm,
     padding: 4,
     backgroundColor: colors.creamCard,
     borderRadius: radii.pill,
     borderWidth: 1,
     borderColor: colors.border,
+    zIndex: 5,
   },
   option: {
     flex: 1,
