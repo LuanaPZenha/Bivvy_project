@@ -1,19 +1,44 @@
-import React, { useMemo, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, Alert } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, Pressable, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { MOCK_LISTINGS, listingPriceLabel } from '../types/listing';
+import { fetchListingById } from '../services/api';
+import { Listing, MOCK_LISTINGS, listingPriceLabel } from '../types/listing';
 import { colors, radii, spacing } from '../theme/tokens';
 import type { ListingDetailScreenProps } from '../navigation/types';
 
 export function ListingDetailScreen({ navigation, route }: ListingDetailScreenProps) {
   const insets = useSafeAreaInsets();
-  const [ctaPressed, setCtaPressed] = useState(false);
+  const listingId = route.params.listingId;
+  const [listing, setListing] = useState<Listing | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const listing = useMemo(
-    () => MOCK_LISTINGS.find((item) => item.id === route.params.listingId),
-    [route.params.listingId],
-  );
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setLoading(true);
+      try {
+        const remote = await fetchListingById(listingId);
+        if (!cancelled) setListing(remote);
+      } catch {
+        const fallback = MOCK_LISTINGS.find((item) => item.id === listingId) || null;
+        if (!cancelled) setListing(fallback);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [listingId]);
+
+  if (loading) {
+    return (
+      <View style={[styles.root, styles.centered]}>
+        <ActivityIndicator color={colors.forest} />
+      </View>
+    );
+  }
 
   if (!listing) {
     return (
@@ -30,8 +55,7 @@ export function ListingDetailScreen({ navigation, route }: ListingDetailScreenPr
   const thumbBg = listing.thumbnailTone === 'forest' ? colors.forestMid : '#6B4F3A';
 
   const onCta = () => {
-    setCtaPressed(true);
-    Alert.alert('Coming soon', `${ctaLabel} will be available in a future release.`);
+    navigation.navigate('BookingRequest', { listingId: listing.id });
   };
 
   return (
@@ -79,7 +103,7 @@ export function ListingDetailScreen({ navigation, route }: ListingDetailScreenPr
 
       <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, spacing.md) }]}>
         <Pressable
-          style={[styles.cta, ctaPressed && styles.ctaMuted]}
+          style={styles.cta}
           onPress={onCta}
           accessibilityRole="button"
           accessibilityLabel={ctaLabel}
@@ -223,9 +247,6 @@ const styles = StyleSheet.create({
     borderRadius: radii.md,
     paddingVertical: 16,
     alignItems: 'center',
-  },
-  ctaMuted: {
-    opacity: 0.85,
   },
   ctaText: {
     color: colors.cream,

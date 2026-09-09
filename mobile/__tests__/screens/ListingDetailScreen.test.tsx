@@ -1,20 +1,21 @@
 import React from 'react';
-import { Alert } from 'react-native';
-import { render, fireEvent } from '@testing-library/react-native';
+import { render, fireEvent, waitFor } from '@testing-library/react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ListingDetailScreen } from '../../src/screens/ListingDetailScreen';
 import { MOCK_LISTINGS } from '../../src/types/listing';
+import { fetchListingById } from '../../src/services/api';
 
-jest.spyOn(Alert, 'alert').mockImplementation(() => {});
+jest.mock('../../src/services/api', () => ({
+  fetchListingById: jest.fn(),
+}));
 
-function makeProps(listingId: string) {
-  return {
-    navigation: { goBack: jest.fn() } as never,
+const mockedFetchListingById = fetchListingById as jest.MockedFunction<typeof fetchListingById>;
+
+function renderDetail(listingId: string, navigation = { goBack: jest.fn(), navigate: jest.fn() }) {
+  const props = {
+    navigation: navigation as never,
     route: { key: 'detail', name: 'ListingDetail' as const, params: { listingId } },
   };
-}
-
-function renderDetail(listingId: string) {
   return render(
     <SafeAreaProvider
       initialMetrics={{
@@ -22,27 +23,42 @@ function renderDetail(listingId: string) {
         insets: { top: 47, left: 0, right: 0, bottom: 34 },
       }}
     >
-      <ListingDetailScreen {...makeProps(listingId)} />
+      <ListingDetailScreen {...props} />
     </SafeAreaProvider>,
   );
 }
 
 describe('ListingDetailScreen', () => {
-  it('renders mode-aware rent price and coming soon CTA', () => {
-    const rent = MOCK_LISTINGS.find((l) => l.mode === 'rent')!;
-    const { getByText, getByLabelText } = renderDetail(rent.id);
-
-    expect(getByText(rent.title)).toBeTruthy();
-    expect(getByText(`$${rent.pricePerDay} / day`)).toBeTruthy();
-    fireEvent.press(getByLabelText('Request rental'));
-    expect(Alert.alert).toHaveBeenCalled();
+  beforeEach(() => {
+    mockedFetchListingById.mockReset();
   });
 
-  it('renders buy price for sale listings', () => {
+  it('renders mode-aware rent price and navigates to BookingRequest', async () => {
+    const rent = MOCK_LISTINGS.find((l) => l.mode === 'rent')!;
+    mockedFetchListingById.mockResolvedValue(rent);
+    const navigation = { goBack: jest.fn(), navigate: jest.fn() };
+    const { getByText, getByLabelText } = renderDetail(rent.id, navigation);
+
+    await waitFor(() => expect(getByText(rent.title)).toBeTruthy());
+    expect(getByText(`$${rent.pricePerDay} / day`)).toBeTruthy();
+    fireEvent.press(getByLabelText('Request rental'));
+    expect(navigation.navigate).toHaveBeenCalledWith('BookingRequest', { listingId: rent.id });
+  });
+
+  it('renders buy price for sale listings', async () => {
     const buy = MOCK_LISTINGS.find((l) => l.mode === 'buy')!;
+    mockedFetchListingById.mockResolvedValue(buy);
     const { getByText, getByLabelText } = renderDetail(buy.id);
 
-    expect(getByText(`$${buy.buyPrice}`)).toBeTruthy();
+    await waitFor(() => expect(getByText(`$${buy.buyPrice}`)).toBeTruthy());
     expect(getByLabelText('Buy')).toBeTruthy();
+  });
+
+  it('falls back to mock listing when fetch fails', async () => {
+    const rent = MOCK_LISTINGS.find((l) => l.mode === 'rent')!;
+    mockedFetchListingById.mockRejectedValue(new Error('offline'));
+    const { getByText } = renderDetail(rent.id);
+
+    await waitFor(() => expect(getByText(rent.title)).toBeTruthy());
   });
 });

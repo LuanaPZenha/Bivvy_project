@@ -18,6 +18,14 @@ export function ProfileScreen() {
   const { user, isLoading, isAuthenticated, logout } = useAuth();
   const rootNav = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
+  const openProtected = (screen: 'MyRentals' | 'MyListings') => {
+    if (!isAuthenticated) {
+      rootNav.navigate('Auth', { screen: 'Login' });
+      return;
+    }
+    rootNav.navigate(screen);
+  };
+
   if (isLoading) {
     return (
       <View style={[styles.root, styles.centered]}>
@@ -53,9 +61,17 @@ export function ProfileScreen() {
       )}
 
       <View style={styles.section}>
-        <StubRow icon="calendar-outline" label="My rentals" />
-        <StubRow icon="heart-outline" label="Saved gear" />
-        <StubRow icon="pricetag-outline" label="My listings" />
+        <NavRow
+          icon="calendar-outline"
+          label="My rentals"
+          onPress={() => openProtected('MyRentals')}
+        />
+        <NavRow
+          icon="pricetag-outline"
+          label="My listings"
+          onPress={() => openProtected('MyListings')}
+          last
+        />
       </View>
 
       {isAuthenticated ? (
@@ -91,13 +107,28 @@ export function ProfileScreen() {
   );
 }
 
-function StubRow({ icon, label }: { icon: keyof typeof Ionicons.glyphMap; label: string }) {
+function NavRow({
+  icon,
+  label,
+  onPress,
+  last,
+}: {
+  icon: keyof typeof Ionicons.glyphMap;
+  label: string;
+  onPress: () => void;
+  last?: boolean;
+}) {
   return (
-    <View style={styles.stubRow} accessibilityLabel={`${label}, Coming soon`}>
+    <Pressable
+      style={[styles.navRow, last && styles.navRowLast]}
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+    >
       <Ionicons name={icon} size={20} color={colors.forest} />
-      <Text style={styles.stubLabel}>{label}</Text>
-      <Text style={styles.comingSoon}>Coming soon</Text>
-    </View>
+      <Text style={styles.navLabel}>{label}</Text>
+      <Ionicons name="chevron-forward" size={18} color={colors.muted} />
+    </Pressable>
   );
 }
 
@@ -162,7 +193,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     marginBottom: spacing.lg,
   },
-  stubRow: {
+  navRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
@@ -171,16 +202,14 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
   },
-  stubLabel: {
+  navRowLast: {
+    borderBottomWidth: 0,
+  },
+  navLabel: {
     flex: 1,
     fontSize: 15,
     fontWeight: '600',
     color: colors.ink,
-  },
-  comingSoon: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: colors.muted,
   },
   authActions: {
     gap: spacing.sm,

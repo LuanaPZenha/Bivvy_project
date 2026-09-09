@@ -5,6 +5,9 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { HomeScreen } from '../screens/HomeScreen';
 import { ListingDetailScreen } from '../screens/ListingDetailScreen';
+import { BookingRequestScreen } from '../screens/BookingRequestScreen';
+import { MyRentalsScreen } from '../screens/MyRentalsScreen';
+import { MyListingsScreen } from '../screens/MyListingsScreen';
 import { ProfileScreen } from '../screens/ProfileScreen';
 import { LoginScreen } from '../screens/LoginScreen';
 import { RegisterScreen } from '../screens/RegisterScreen';
@@ -38,6 +41,7 @@ function ExploreNavigator() {
     <ExploreStack.Navigator screenOptions={{ headerShown: false }}>
       <ExploreStack.Screen name="Home" component={HomeScreen} />
       <ExploreStack.Screen name="ListingDetail" component={ListingDetailScreen} />
+      <ExploreStack.Screen name="BookingRequest" component={BookingRequestScreen} />
     </ExploreStack.Navigator>
   );
 }
@@ -85,6 +89,8 @@ export function RootNavigator() {
           component={AuthNavigator}
           options={{ presentation: 'modal' }}
         />
+        <RootStack.Screen name="MyRentals" component={MyRentalsScreen} />
+        <RootStack.Screen name="MyListings" component={MyListingsScreen} />
       </RootStack.Navigator>
     </NavigationContainer>
   );

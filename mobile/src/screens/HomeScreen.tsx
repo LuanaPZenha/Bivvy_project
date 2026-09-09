@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, ScrollView, StyleSheet } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, ActivityIndicator, Pressable } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { HomeHeader } from '../components/HomeHeader';
 import { CategoryChips } from '../components/CategoryChips';
@@ -7,35 +7,73 @@ import { ModeToggle } from '../components/ModeToggle';
 import { ProBanner } from '../components/ProBanner';
 import { ListingCard } from '../components/ListingCard';
 import { useListings } from '../hooks/useListings';
+import { labelForZip, nextSeattleZip } from '../data/seattleZips';
 import { colors, spacing } from '../theme/tokens';
 import type { HomeScreenProps } from '../navigation/types';
 
 export function HomeScreen({ navigation }: HomeScreenProps) {
-  const { category, setCategory, mode, setMode, query, setQuery, listings, count } = useListings();
+  const {
+    category,
+    setCategory,
+    mode,
+    setMode,
+    query,
+    setQuery,
+    zipCode,
+    setZipCode,
+    listings,
+    count,
+    isLoading,
+    usingFallback,
+    reload,
+  } = useListings();
+
+  const locationLabel = labelForZip(zipCode);
 
   return (
     <View style={styles.root}>
       <StatusBar style="light" />
-      <HomeHeader locationLabel="Fremont, Seattle" searchValue={query} onSearchChange={setQuery} />
+      <HomeHeader
+        locationLabel={locationLabel}
+        searchValue={query}
+        onSearchChange={setQuery}
+        onLocationPress={() => setZipCode(nextSeattleZip(zipCode))}
+      />
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
+        {usingFallback ? (
+          <Pressable
+            style={styles.offlineBanner}
+            onPress={reload}
+            accessibilityRole="button"
+            accessibilityLabel="Offline mode. Showing saved listings. Tap to retry."
+          >
+            <Text style={styles.offlineTitle}>Offline mode</Text>
+            <Text style={styles.offlineBody}>Showing saved listings. Tap to retry.</Text>
+          </Pressable>
+        ) : null}
+
         <ModeToggle value={mode} onChange={setMode} />
         <CategoryChips selected={category} onSelect={setCategory} />
         <ProBanner />
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>NEAR YOU</Text>
           <Text style={styles.sectionMeta}>
-            {count} listing{count === 1 ? '' : 's'}
+            {isLoading ? 'Loading…' : `${count} listing${count === 1 ? '' : 's'}`}
           </Text>
         </View>
-        {listings.length === 0 ? (
+        {isLoading && listings.length === 0 ? (
+          <View style={styles.loading}>
+            <ActivityIndicator color={colors.forest} />
+          </View>
+        ) : listings.length === 0 ? (
           <View style={styles.empty} accessibilityLabel="No listings found">
             <Text style={styles.emptyTitle}>No gear nearby</Text>
             <Text style={styles.emptyBody}>
-              Try another category or switch between Rent and Buy.
+              Try another category, ZIP, or switch between Rent and Buy.
             </Text>
           </View>
         ) : (
@@ -63,6 +101,26 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingBottom: spacing.xl,
   },
+  offlineBanner: {
+    marginHorizontal: spacing.md,
+    marginTop: spacing.md,
+    marginBottom: spacing.sm,
+    padding: spacing.md,
+    borderRadius: 12,
+    backgroundColor: '#FFF6E5',
+    borderWidth: 1,
+    borderColor: colors.gold,
+  },
+  offlineTitle: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: colors.ink,
+    marginBottom: 2,
+  },
+  offlineBody: {
+    fontSize: 13,
+    color: colors.muted,
+  },
   sectionHeader: {
     marginTop: spacing.sm,
     marginBottom: spacing.sm,
@@ -80,6 +138,10 @@ const styles = StyleSheet.create({
   sectionMeta: {
     fontSize: 13,
     color: colors.muted,
+  },
+  loading: {
+    paddingVertical: spacing.xl,
+    alignItems: 'center',
   },
   empty: {
     marginHorizontal: spacing.md,
