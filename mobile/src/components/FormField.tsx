@@ -17,6 +17,7 @@ export function FormField({
   hint,
   onToggleSecure,
   secureVisible,
+  style,
   ...inputProps
 }: Props) {
   const showToggle = typeof onToggleSecure === 'function';
@@ -26,7 +27,7 @@ export function FormField({
       <Text style={styles.label}>{label}</Text>
       <View style={[styles.inputRow, error ? styles.inputRowError : null]}>
         <TextInput
-          style={styles.input}
+          style={[styles.input, style]}
           placeholderTextColor={colors.muted}
           accessibilityLabel={label}
           {...inputProps}
