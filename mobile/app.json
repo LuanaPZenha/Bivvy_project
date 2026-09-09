@@ -29,7 +29,13 @@
     "plugins": [
       "expo-asset",
       "expo-font",
-      "expo-web-browser"
+      "expo-web-browser",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow Bivvy to access your photos so you can add images to gear listings."
+        }
+      ]
     ]
   }
 }
