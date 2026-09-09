@@ -236,6 +236,8 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
+    zIndex: 20,
+    elevation: 20,
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.md,
     backgroundColor: colors.cream,
@@ -247,6 +249,8 @@ const styles = StyleSheet.create({
     borderRadius: radii.md,
     paddingVertical: 16,
     alignItems: 'center',
+    // Ensure web pointer clicks hit the CTA above the ScrollView.
+    cursor: 'pointer' as const,
   },
   ctaText: {
     color: colors.cream,

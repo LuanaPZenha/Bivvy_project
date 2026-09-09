@@ -15,7 +15,7 @@ const OPTIONS: { id: MarketMode; label: string }[] = [
 
 export function ModeToggle({ value, onChange }: Props) {
   return (
-    <View style={styles.wrap} accessibilityRole="tablist">
+    <View style={styles.wrap} accessibilityRole="radiogroup">
       {OPTIONS.map((opt) => {
         const active = opt.id === value;
         return (
@@ -23,9 +23,11 @@ export function ModeToggle({ value, onChange }: Props) {
             key={opt.id}
             onPress={() => onChange(opt.id)}
             style={[styles.option, active && styles.optionActive]}
-            accessibilityRole="tab"
+            accessibilityRole="button"
             accessibilityState={{ selected: active }}
             accessibilityLabel={opt.label}
+            // RN Web: role=tab often swallows mouse clicks in desktop browsers.
+            // Keep a plain button role so Rent/Buy toggles reliably on web.
           >
             <Text style={[styles.label, active && styles.labelActive]}>{opt.label}</Text>
           </Pressable>
@@ -51,6 +53,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: radii.pill,
     alignItems: 'center',
+    cursor: 'pointer' as const,
   },
   optionActive: {
     backgroundColor: colors.forest,

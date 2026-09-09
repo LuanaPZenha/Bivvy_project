@@ -65,6 +65,9 @@ function MainTabs() {
         tabBarStyle: {
           backgroundColor: colors.creamCard,
           borderTopColor: colors.border,
+          // Keep the tab bar above absolute footers on web so Profile/Explore stay clickable.
+          zIndex: 30,
+          elevation: 30,
         },
         tabBarIcon: ({ color, size }) => {
           const icon =
