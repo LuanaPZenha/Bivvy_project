@@ -11,8 +11,6 @@ import {
   Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../auth/AuthContext';
 import { FormField } from '../components/FormField';
@@ -28,7 +26,8 @@ import {
   listingPriceLabel,
 } from '../types/listing';
 import { colors, radii, spacing } from '../theme/tokens';
-import type { BookingRequestScreenProps, RootStackParamList } from '../navigation/types';
+import { useRootNavigation } from '../navigation/useRootNavigation';
+import type { BookingRequestScreenProps } from '../navigation/types';
 
 function toIsoDate(date: Date): string {
   return date.toISOString().slice(0, 10);
@@ -53,7 +52,7 @@ function money(n: number | undefined): string {
 export function BookingRequestScreen({ navigation, route }: BookingRequestScreenProps) {
   const insets = useSafeAreaInsets();
   const { isAuthenticated } = useAuth();
-  const rootNav = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const rootNav = useRootNavigation();
   const listingId = route.params.listingId;
 
   const [listing, setListing] = useState<Listing | null>(null);

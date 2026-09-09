@@ -2,11 +2,9 @@ import React from 'react';
 import { View, Text, StyleSheet, Pressable, ActivityIndicator } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useAuth } from '../auth/AuthContext';
 import { colors, radii, spacing } from '../theme/tokens';
-import type { RootStackParamList } from '../navigation/types';
+import { useRootNavigation } from '../navigation/useRootNavigation';
 
 function initials(name: string, email: string): string {
   const source = name?.trim() || email;
@@ -16,7 +14,7 @@ function initials(name: string, email: string): string {
 export function ProfileScreen() {
   const insets = useSafeAreaInsets();
   const { user, isLoading, isAuthenticated, logout } = useAuth();
-  const rootNav = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const rootNav = useRootNavigation();
 
   const openProtected = (screen: 'MyRentals' | 'MyListings') => {
     if (!isAuthenticated) {
