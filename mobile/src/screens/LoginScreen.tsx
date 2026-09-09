@@ -13,6 +13,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../auth/AuthContext';
 import { FormField } from '../components/FormField';
+import { GoogleSignInButton } from '../components/GoogleSignInButton';
 import { PineLogo } from '../components/PineLogo';
 import { isValidEmail } from '../utils/validation';
 import { colors, radii, spacing } from '../theme/tokens';
@@ -150,6 +151,18 @@ export function LoginScreen({ navigation }: LoginScreenProps) {
           )}
         </Pressable>
 
+        <View style={styles.dividerRow} accessibilityRole="none">
+          <View style={styles.dividerLine} />
+          <Text style={styles.dividerText}>or</Text>
+          <View style={styles.dividerLine} />
+        </View>
+
+        <GoogleSignInButton
+          label="Continue with Google"
+          onSuccess={closeAuth}
+          onError={(message) => setFormError(message)}
+        />
+
         <Pressable
           onPress={() => navigation.navigate('Register')}
           accessibilityRole="button"
@@ -215,6 +228,23 @@ const styles = StyleSheet.create({
     color: colors.cream,
     fontWeight: '800',
     fontSize: 16,
+  },
+  dividerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginTop: spacing.lg,
+    marginBottom: spacing.md,
+  },
+  dividerLine: {
+    flex: 1,
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: colors.border,
+  },
+  dividerText: {
+    color: colors.muted,
+    fontSize: 13,
+    fontWeight: '600',
   },
   link: {
     marginTop: spacing.lg,

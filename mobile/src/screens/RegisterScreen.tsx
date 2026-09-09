@@ -14,6 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../auth/AuthContext';
 import { Checkbox } from '../components/Checkbox';
 import { FormField } from '../components/FormField';
+import { GoogleSignInButton } from '../components/GoogleSignInButton';
 import { PasswordStrengthMeter } from '../components/PasswordStrengthMeter';
 import { PineLogo } from '../components/PineLogo';
 import {
@@ -226,6 +227,18 @@ export function RegisterScreen({ navigation }: RegisterScreenProps) {
           )}
         </Pressable>
 
+        <View style={styles.dividerRow} accessibilityRole="none">
+          <View style={styles.dividerLine} />
+          <Text style={styles.dividerText}>or</Text>
+          <View style={styles.dividerLine} />
+        </View>
+
+        <GoogleSignInButton
+          label="Continue with Google"
+          onSuccess={closeAuth}
+          onError={(message) => setFormError(message)}
+        />
+
         <Pressable
           onPress={() => navigation.navigate('Login')}
           accessibilityRole="button"
@@ -291,6 +304,23 @@ const styles = StyleSheet.create({
     color: colors.cream,
     fontWeight: '800',
     fontSize: 16,
+  },
+  dividerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginTop: spacing.lg,
+    marginBottom: spacing.md,
+  },
+  dividerLine: {
+    flex: 1,
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: colors.border,
+  },
+  dividerText: {
+    color: colors.muted,
+    fontSize: 13,
+    fontWeight: '600',
   },
   link: {
     marginTop: spacing.lg,

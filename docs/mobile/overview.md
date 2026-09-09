@@ -64,7 +64,7 @@ mobile/
 - **Listings:** `useListings` calls `GET /api/gear/near` (debounced). On network failure it filters `MOCK_LISTINGS` and shows an offline banner.
 - **Bookings / quotes:** live gateway routes via `mobile/src/services/api.ts` (silent refresh on 401 for authenticated calls).
 - **Auth:** tokens + user JSON in SecureStore via `AuthContext`. Session restores from stored user when an access token exists.
-- **Google sign-in:** backend route and `GoogleSignInButton` exist, but the button is not rendered in the auth screens yet (**Planned**: enable after Android/iOS OAuth clients are configured).
+- **Google sign-in:** `GoogleSignInButton` is rendered on Login and Register. Backend `POST /api/auth/google` is wired. Configure `EXPO_PUBLIC_GOOGLE_CLIENT_ID` (web) and platform client ids for native.
 
 ## Commands
 

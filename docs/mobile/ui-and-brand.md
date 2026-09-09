@@ -40,7 +40,7 @@ Defined in `mobile/src/theme/tokens.ts`:
 - Profile rows: **Cart**, **My rentals**, **My listings** (auth required for rentals/listings).
 - My listings supports **Add photo**.
 - Auth copy stays English; errors surface gateway messages when available.
-- Register is the default auth entry (email/password). The Google button component exists but is not mounted yet — device sign-in still needs native OAuth clients.
+- Register is the default auth entry (email/password). Google **Continue with Google** is mounted on Login and Register; it needs `EXPO_PUBLIC_GOOGLE_CLIENT_ID` (and native client ids on device).
 ## Copy examples (English)
 
 - Search placeholder: `Search tents, kayaks, skis...`

@@ -6,7 +6,14 @@ import { RegisterScreen } from '../../src/screens/RegisterScreen';
 const mockRegister = jest.fn();
 
 jest.mock('../../src/auth/AuthContext', () => ({
-  useAuth: () => ({ register: mockRegister }),
+  useAuth: () => ({ register: mockRegister, loginWithGoogle: jest.fn() }),
+}));
+
+jest.mock('../../src/components/GoogleSignInButton', () => ({
+  GoogleSignInButton: ({ label = 'Continue with Google' }: { label?: string }) => {
+    const { Text } = require('react-native');
+    return <Text accessibilityRole="button">{label}</Text>;
+  },
 }));
 
 function renderScreen() {
