@@ -1,7 +1,11 @@
 'use strict';
 
+const { randomUUID } = require('crypto');
 const { User } = require('../../domain/entities/User');
 const { Email } = require('../../domain/value-objects/Email');
+const { Phone } = require('../../domain/value-objects/Phone');
+
+const MIN_PASSWORD_LENGTH = 8;
 
 class RegisterUser {
   /**
@@ -13,27 +17,33 @@ class RegisterUser {
     this.tokenService = tokenService;
   }
 
-  async execute({ email, password, name }) {
-    if (!password || password.length < 8) {
-      const err = new Error('Password must be at least 8 characters');
-      err.status = 400;
-      throw err;
+  async execute({ email, password, name, phone, acceptTerms }) {
+    if (!password || password.length < MIN_PASSWORD_LENGTH) {
+      throw badRequest(`Password must be at least ${MIN_PASSWORD_LENGTH} characters`);
+    }
+    if (!/[A-Za-z]/.test(password) || !/[0-9]/.test(password)) {
+      throw badRequest('Password must include letters and numbers');
+    }
+    if (acceptTerms !== true) {
+      throw badRequest('You must accept the Terms of Service');
     }
 
     const emailVo = new Email(email);
+    const phoneVo = phone ? new Phone(phone) : null;
+
     const existing = await this.userRepository.findByEmail(emailVo.value);
     if (existing) {
-      const err = new Error('Email already registered');
-      err.status = 409;
-      throw err;
+      throw conflict('Email already registered');
     }
 
     const passwordHash = await this.passwordHasher.hash(password);
     const user = new User({
-      id: cryptoRandomId(),
+      id: randomUUID(),
       email: emailVo.value,
       passwordHash,
-      name: name || emailVo.value.split('@')[0],
+      name: (name || '').trim() || emailVo.value.split('@')[0],
+      phone: phoneVo ? phoneVo.value : null,
+      acceptedTermsAt: new Date(),
     });
 
     await this.userRepository.save(user);
@@ -43,8 +53,16 @@ class RegisterUser {
   }
 }
 
-function cryptoRandomId() {
-  return require('crypto').randomUUID();
+function badRequest(message) {
+  const err = new Error(message);
+  err.status = 400;
+  return err;
+}
+
+function conflict(message) {
+  const err = new Error(message);
+  err.status = 409;
+  return err;
 }
 
 module.exports = { RegisterUser };

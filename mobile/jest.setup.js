@@ -1,1 +1,1 @@
-import '@testing-library/jest-native/extend-expect';
+// Built-in Jest matchers load automatically via @testing-library/react-native imports.

@@ -31,6 +31,8 @@ Auth login has an **additional** stricter rate limit (20 / 15 min) inside `auth-
 
 ## Authentication & passwords — Current / Bootstrap
 
+Google Sign-In uses a Google **ID token** verified server-side (`GOOGLE_CLIENT_ID` audience). The mobile app only receives the public Web client ID (`EXPO_PUBLIC_GOOGLE_CLIENT_ID`). Never ship `GOOGLE_CLIENT_SECRET` to the client. OAuth consent stays in **Testing** until verification; only listed test users can sign in.
+
 | Topic | Decision |
 |-------|----------|
 | Password hashing | bcrypt, `BCRYPT_ROUNDS` default `12` |
@@ -95,7 +97,7 @@ Details: [Mobile Security](./mobile/security.md).
 - [ ] TLS everywhere (no cleartext API)
 - [ ] Rotate JWT secrets via a secrets manager
 - [ ] Redis-backed refresh tokens with TTL
-- [ ] Postgres adapters replacing in-memory repos
+- [x] Postgres adapter for auth users (Core still in memory)
 - [ ] Certificate pinning on release builds
 - [ ] WAF / cloud rate limits in front of the gateway
 - [ ] Structured audit logs for auth events (no secrets)

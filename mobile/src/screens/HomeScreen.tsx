@@ -3,13 +3,15 @@ import { View, Text, ScrollView, StyleSheet } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { HomeHeader } from '../components/HomeHeader';
 import { CategoryChips } from '../components/CategoryChips';
+import { ModeToggle } from '../components/ModeToggle';
 import { ProBanner } from '../components/ProBanner';
 import { ListingCard } from '../components/ListingCard';
 import { useListings } from '../hooks/useListings';
 import { colors, spacing } from '../theme/tokens';
+import type { HomeScreenProps } from '../navigation/types';
 
-export function HomeScreen() {
-  const { category, setCategory, query, setQuery, listings, count } = useListings();
+export function HomeScreen({ navigation }: HomeScreenProps) {
+  const { category, setCategory, mode, setMode, query, setQuery, listings, count } = useListings();
 
   return (
     <View style={styles.root}>
@@ -20,6 +22,7 @@ export function HomeScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
+        <ModeToggle value={mode} onChange={setMode} />
         <CategoryChips selected={category} onSelect={setCategory} />
         <ProBanner />
         <View style={styles.sectionHeader}>
@@ -28,9 +31,22 @@ export function HomeScreen() {
             {count} listing{count === 1 ? '' : 's'}
           </Text>
         </View>
-        {listings.map((item) => (
-          <ListingCard key={item.id} listing={item} />
-        ))}
+        {listings.length === 0 ? (
+          <View style={styles.empty} accessibilityLabel="No listings found">
+            <Text style={styles.emptyTitle}>No gear nearby</Text>
+            <Text style={styles.emptyBody}>
+              Try another category or switch between Rent and Buy.
+            </Text>
+          </View>
+        ) : (
+          listings.map((item) => (
+            <ListingCard
+              key={item.id}
+              listing={item}
+              onPress={() => navigation.navigate('ListingDetail', { listingId: item.id })}
+            />
+          ))
+        )}
       </ScrollView>
     </View>
   );
@@ -48,7 +64,7 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.xl,
   },
   sectionHeader: {
-    marginTop: spacing.lg,
+    marginTop: spacing.sm,
     marginBottom: spacing.sm,
     paddingHorizontal: spacing.md,
     flexDirection: 'row',
@@ -64,5 +80,25 @@ const styles = StyleSheet.create({
   sectionMeta: {
     fontSize: 13,
     color: colors.muted,
+  },
+  empty: {
+    marginHorizontal: spacing.md,
+    marginTop: spacing.md,
+    padding: spacing.lg,
+    borderRadius: 16,
+    backgroundColor: colors.creamCard,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  emptyTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: colors.ink,
+    marginBottom: 6,
+  },
+  emptyBody: {
+    fontSize: 14,
+    color: colors.muted,
+    lineHeight: 20,
   },
 });

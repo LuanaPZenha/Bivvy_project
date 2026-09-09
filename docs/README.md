@@ -1,9 +1,9 @@
 # Bivvy Documentation
 
 > Product language: **English** (US market).  
-> Last reviewed: **2026-08-02**
+> Last reviewed: **2026-08-10**
 
-Bivvy is an outdoor adventure gear rental marketplace. This folder is the **source of truth** for how the system is designed, built, secured, and operated.
+Bivvy is an outdoor adventure gear rental and resale marketplace. This folder is the **source of truth** for how the system is designed, built, secured, and operated.
 
 ## Read in this order
 
@@ -51,10 +51,10 @@ Bivvy is an outdoor adventure gear rental marketplace. This folder is the **sour
 | Area | Status |
 |------|--------|
 | API Gateway (proxy + edge security) | Bootstrap complete |
-| Auth (register / login / refresh) | Bootstrap (in-memory persistence) |
+| Auth (register / login / refresh) | Current (Postgres users; refresh tokens in memory) |
 | Core listings (near you / create) | Bootstrap (in-memory seed data) |
 | Mobile home UI (Bivvy brand) | Bootstrap (mock listings) |
-| Postgres / Redis wiring | Compose ready; services still use in-memory adapters |
+| Postgres / Redis wiring | Auth users on Postgres; Core and Redis still in memory |
 | Message broker | Planned (not implemented) |
 
 When you change behavior, update the matching docs in the same change. See [DOCUMENTATION.md](./DOCUMENTATION.md).
