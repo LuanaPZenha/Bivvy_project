@@ -45,10 +45,12 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
         onCartPress={() => rootNav.navigate('Cart')}
         cartCount={cartCount}
       />
+      <ModeToggle value={mode} onChange={setMode} />
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
       >
         {usingFallback ? (
           <Pressable
@@ -62,7 +64,6 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
           </Pressable>
         ) : null}
 
-        <ModeToggle value={mode} onChange={setMode} />
         <CategoryChips selected={category} onSelect={setCategory} />
         <ProBanner />
         <View style={styles.sectionHeader}>
