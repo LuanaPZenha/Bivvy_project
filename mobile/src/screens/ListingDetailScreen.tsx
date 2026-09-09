@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   Image,
   Alert,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -96,6 +97,11 @@ export function ListingDetailScreen({ navigation, route }: ListingDetailScreenPr
     const result = addItem(listing);
     if (!result.ok) {
       Alert.alert('Cannot add to cart', result.error);
+      return;
+    }
+    // Alert.alert is unreliable on RN Web; go straight to cart there.
+    if (Platform.OS === 'web') {
+      rootNav.navigate('Cart');
       return;
     }
     Alert.alert('Added to cart', listing.title, [

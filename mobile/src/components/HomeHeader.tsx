@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TextInput, Pressable, StyleSheet } from 'react-native';
+import { View, Text, TextInput, Pressable, StyleSheet, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { PineLogo } from './PineLogo';
@@ -39,6 +39,15 @@ export function HomeHeader({
             accessibilityLabel={cartCount ? `Cart, ${cartCount} items` : 'Cart'}
             hitSlop={12}
             onPress={onCartPress}
+            {...(Platform.OS === 'web'
+              ? ({
+                  onClick: (event: { stopPropagation?: () => void }) => {
+                    event?.stopPropagation?.();
+                    onCartPress?.();
+                  },
+                } as object)
+              : {})}
+            testID="header-cart"
           >
             <View>
               <Ionicons name="cart-outline" size={24} color={colors.cream} />
