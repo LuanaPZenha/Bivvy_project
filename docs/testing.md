@@ -63,13 +63,17 @@ api-gateway/
 ```
 mobile/
   __tests__/
+    auth/
     components/
     hooks/
+    screens/
+    utils/
 ```
 
 - Use `@testing-library/react-native`.
 - Prefer queries by accessibility label/role (matches production a11y).
 - Hook tests use `renderHook` + `act`.
+- Screens that call `useSafeAreaInsets` should wrap with `SafeAreaProvider` in tests.
 
 ## Writing new tests (checklist)
 
@@ -83,8 +87,8 @@ mobile/
 | Package | Suites (Bootstrap) |
 |---------|--------------------|
 | api-gateway | Health + 404 |
-| auth-service | Register/Login unit + register/login integration |
+| auth-service | Register/Login/Google unit + register/login/demo-seed integration + Postgres repository (opt-in) |
 | core-service | ListNearYou unit + gear/listings integration |
-| mobile | `CategoryChips`, `useListings` |
+| mobile | `CategoryChips`, `ModeToggle`, `ListingCard`, `useListings`, `ListingDetailScreen`, `RegisterScreen`, `LoginScreen`, `validation` utils, `AuthContext` |
 
 Expand coverage as features land; do not delete the mandatory folders.

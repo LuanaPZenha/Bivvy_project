@@ -26,14 +26,24 @@ class JwtTokenService {
   }
 
   async issuePair(user) {
-    const accessToken = jwt.sign({ sub: user.id, email: user.email }, this.accessSecret, {
-      expiresIn: this.accessExpiresIn,
-    });
+    const accessToken = jwt.sign(
+      {
+        sub: user.id,
+        email: user.email,
+        role: user.role || 'both',
+        name: user.name || '',
+      },
+      this.accessSecret,
+      { expiresIn: this.accessExpiresIn },
+    );
 
     const refreshToken = crypto.randomBytes(48).toString('base64url');
     const hash = this.#hash(refreshToken);
     this.store.set(hash, {
       userId: user.id,
+      email: user.email,
+      role: user.role || 'both',
+      name: user.name || '',
       expiresAt: Date.now() + this.#parseDurationMs(this.refreshExpiresIn),
     });
 
@@ -56,8 +66,12 @@ class JwtTokenService {
     }
     this.store.delete(hash);
 
-    const user = { id: entry.userId, email: entry.email || '' };
-    return this.issuePair(user);
+    return this.issuePair({
+      id: entry.userId,
+      email: entry.email || '',
+      role: entry.role || 'both',
+      name: entry.name || '',
+    });
   }
 
   async revoke(refreshToken) {

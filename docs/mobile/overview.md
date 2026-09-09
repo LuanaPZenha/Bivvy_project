@@ -1,17 +1,17 @@
 # Mobile App Overview
 
-Expo (React Native) client for Bivvy — US English UI for outdoor gear rental.
+Expo (React Native) client for Bivvy — US English UI for outdoor gear rentals and sales.
 
 | | |
 |--|--|
 | Package | `bivvy-mobile` |
 | Directory | `mobile/` |
-| Framework | Expo SDK ~52, React Native 0.76 |
-| Status | Bootstrap (home screen + mock listings) |
+| Framework | Expo SDK ~54, React Native 0.81 |
+| Status | Marketplace MVP (browse, quote, book, own listings, auth) |
 
 ## Purpose
 
-Provide the consumer experience: locate pickup area, search/filter gear, browse “Near You” listings, and promote Bivvy Pro. The app talks **only** to the API Gateway (`EXPO_PUBLIC_API_URL`).
+Provide the consumer experience: browse nearby gear for **rent or buy**, open listing details, request bookings, manage rentals and owner listings, and sign in / register. The app talks **only** to the API Gateway (`EXPO_PUBLIC_API_URL`).
 
 ## Layout
 
@@ -20,27 +20,47 @@ mobile/
   App.tsx
   app.json
   src/
-    screens/HomeScreen.tsx
-    components/          # HomeHeader, CategoryChips, ProBanner, ListingCard, PineLogo
+    auth/AuthContext.tsx
+    navigation/          # Root stack, tabs, explore + auth stacks
+    screens/             # Home, ListingDetail, BookingRequest, MyRentals, MyListings, Login, Register, Profile
+    components/          # HomeHeader, ModeToggle, CategoryChips, ProBanner, ListingCard, FormField, Checkbox, PasswordStrengthMeter, PineLogo
+    data/seattleZips.ts  # ZIP labels for Near You
+    utils/validation.ts  # Email/phone/password rules shared by forms
     hooks/useListings.ts
     services/api.ts
-    security/            # SecureStore + pinning hook
+    security/            # SecureStore session + pinning hook
     theme/tokens.ts
-    types/listing.ts
+    types/
   __tests__/
-    components/
-    hooks/
 ```
+
+## Navigation
+
+| Area | Screens |
+|------|---------|
+| Explore tab | Home → Listing detail → Booking request |
+| Profile tab | Profile → My rentals / My listings (root stack) |
+| Auth modal | Login, Register |
 
 ## Current screens
 
 | Screen | Status | Description |
 |--------|--------|-------------|
-| Home | Current | Dark forest header, search, categories, Pro banner, Near You list |
+| Home (Explore) | Current | Forest header, ZIP cycling, Rent/Buy, categories, Pro banner, Near You feed (API with offline mock fallback) |
+| Listing detail | Current | Fetches by id (mock fallback); CTA opens Booking request |
+| Booking request | Current | Dates + quote + create booking (auth required to submit) |
+| My rentals | Current | Owner accept/decline; renter cancel/pay (simulated checkout) |
+| My listings | Current | Owner list + create form |
+| Register (auth entry) | Current | Full name, email, optional phone, password + strength meter, confirm, terms checkbox, marketing opt-in |
+| Login | Current | Email/password sign-in with per-field validation and show/hide (dev demo account: `demo@bivvy.test` / `BivvyDemo123`) |
+| Profile | Current | Guest or signed-in card; links to My rentals and My listings |
 
 ## Data today
 
-`useListings` filters **mock** listings in `src/types/listing.ts` (aligned with Core seed titles). Wiring the home feed to `GET /api/gear/near` is the next integration step (**Planned**).
+- **Listings:** `useListings` calls `GET /api/gear/near` (debounced). On network failure it filters `MOCK_LISTINGS` and shows an offline banner.
+- **Bookings / quotes:** live gateway routes via `mobile/src/services/api.ts` (silent refresh on 401 for authenticated calls).
+- **Auth:** tokens + user JSON in SecureStore via `AuthContext`. Session restores from stored user when an access token exists.
+- **Google sign-in:** backend route and `GoogleSignInButton` exist, but the button is not rendered in the auth screens yet (**Planned**: enable after Android/iOS OAuth clients are configured).
 
 ## Commands
 

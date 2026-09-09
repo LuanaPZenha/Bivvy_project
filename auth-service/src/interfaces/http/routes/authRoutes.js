@@ -2,6 +2,7 @@
 
 const { Router } = require('express');
 const rateLimit = require('express-rate-limit');
+const { requireAuth } = require('../middleware/requireAuth');
 
 function createAuthRouter(controller) {
   const router = Router();
@@ -14,7 +15,9 @@ function createAuthRouter(controller) {
 
   router.post('/register', (req, res, next) => controller.register(req, res, next));
   router.post('/login', loginLimiter, (req, res, next) => controller.login(req, res, next));
+  router.post('/google', loginLimiter, (req, res, next) => controller.google(req, res, next));
   router.post('/refresh', (req, res, next) => controller.refresh(req, res, next));
+  router.get('/me', requireAuth, (req, res, next) => controller.me(req, res, next));
 
   return router;
 }

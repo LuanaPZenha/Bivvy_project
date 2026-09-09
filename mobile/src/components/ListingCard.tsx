@@ -1,21 +1,45 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Listing } from '../types/listing';
+import { Listing, listingPriceLabel } from '../types/listing';
 import { colors, radii, spacing } from '../theme/tokens';
 
 type Props = {
   listing: Listing;
+  onPress?: () => void;
 };
 
-export function ListingCard({ listing }: Props) {
+function categoryIcon(category: Listing['category']): keyof typeof Ionicons.glyphMap {
+  switch (category) {
+    case 'camping':
+      return 'bonfire-outline';
+    case 'hiking':
+      return 'walk-outline';
+    case 'climbing':
+      return 'trail-sign-outline';
+    case 'water':
+      return 'boat-outline';
+    case 'snow':
+      return 'snow-outline';
+    case 'bikes':
+      return 'bicycle-outline';
+    default:
+      return 'cube-outline';
+  }
+}
+
+export function ListingCard({ listing, onPress }: Props) {
   const thumbBg = listing.thumbnailTone === 'forest' ? colors.forestMid : '#6B4F3A';
-  const iconName = listing.category === 'backpacks' ? 'bag-handle' : 'home-outline';
 
   return (
-    <View style={styles.card} accessibilityRole="button" accessibilityLabel={listing.title}>
+    <Pressable
+      style={styles.card}
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={listing.title}
+    >
       <View style={[styles.thumb, { backgroundColor: thumbBg }]}>
-        <Ionicons name={iconName} size={36} color={colors.cream} />
+        <Ionicons name={categoryIcon(listing.category)} size={36} color={colors.cream} />
         {listing.isPro ? (
           <View style={styles.proBadge}>
             <Text style={styles.proText}>PRO</Text>
@@ -33,6 +57,7 @@ export function ListingCard({ listing }: Props) {
             <Text style={styles.avatarLetter}>{listing.ownerName.charAt(0)}</Text>
           </View>
           <Text style={styles.ownerName}>{listing.ownerName}</Text>
+          <Text style={styles.modeTag}>{listing.mode === 'rent' ? 'Rent' : 'Buy'}</Text>
         </View>
 
         <View style={styles.ratingRow}>
@@ -50,14 +75,14 @@ export function ListingCard({ listing }: Props) {
         </View>
 
         <View style={styles.metaRow}>
-          <Text style={styles.price}>${listing.pricePerDay} / day</Text>
+          <Text style={styles.price}>{listingPriceLabel(listing)}</Text>
           <View style={styles.distance}>
             <Ionicons name="location-sharp" size={12} color={colors.muted} />
             <Text style={styles.distanceText}>{listing.distanceMiles.toFixed(1)} mi</Text>
           </View>
         </View>
       </View>
-    </View>
+    </Pressable>
   );
 }
 
@@ -122,6 +147,17 @@ const styles = StyleSheet.create({
   ownerName: {
     color: colors.muted,
     fontSize: 13,
+    flex: 1,
+  },
+  modeTag: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: colors.forest,
+    backgroundColor: colors.goldSoft,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: radii.pill,
+    overflow: 'hidden',
   },
   ratingRow: {
     flexDirection: 'row',

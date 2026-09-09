@@ -9,6 +9,10 @@ class IListingRepository {
     throw new Error('Not implemented');
   }
 
+  async findByOwnerId(_ownerId) {
+    throw new Error('Not implemented');
+  }
+
   async save(_listing) {
     throw new Error('Not implemented');
   }
