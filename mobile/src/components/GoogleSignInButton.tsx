@@ -13,34 +13,97 @@ type Props = {
   onError?: (message: string) => void;
 };
 
-export function GoogleSignInButton({
-  label = 'Continue with Google',
-  onSuccess,
-  onError,
-}: Props) {
-  const { loginWithGoogle } = useAuth();
-  const [busy, setBusy] = useState(false);
+function isRealClientId(value: string): boolean {
+  const v = value.trim();
+  if (!v) return false;
+  // .env.example placeholders
+  if (v.startsWith('your_') || v.includes('change_me')) return false;
+  return v.includes('.apps.googleusercontent.com');
+}
 
+function readClientIds() {
   const webClientId = process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID || '';
   const iosClientId = process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID || '';
   const androidClientId = process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID || '';
-
-  // Native platforms need their own OAuth client; web reuses the web client.
   const platformClientId =
     Platform.OS === 'android' ? androidClientId : Platform.OS === 'ios' ? iosClientId : webClientId;
-  const isConfigured = Boolean(webClientId) && Boolean(platformClientId);
+  return {
+    webClientId,
+    iosClientId,
+    androidClientId,
+    platformClientId,
+    isConfigured: isRealClientId(webClientId) && isRealClientId(platformClientId),
+  };
+}
 
-  const [request, response, promptAsync] = Google.useIdTokenAuthRequest(
-    isConfigured
-      ? {
-          clientId: webClientId,
-          webClientId,
-          iosClientId: iosClientId || undefined,
-          androidClientId: androidClientId || undefined,
-        }
-      : // Avoid the provider throwing when a platform client id is missing.
-        { clientId: undefined },
+/**
+ * Outer shell: never mount expo-auth-session Google hook without a real webClientId,
+ * or the provider throws and the ErrorBoundary takes over the whole app.
+ */
+export function GoogleSignInButton(props: Props) {
+  const ids = readClientIds();
+  if (!ids.isConfigured) {
+    return <UnconfiguredGoogleButton {...props} />;
+  }
+  return <ConfiguredGoogleSignInButton {...props} {...ids} />;
+}
+
+function UnconfiguredGoogleButton({
+  label = 'Continue with Google',
+  onError,
+}: Props) {
+  const onPress = () => {
+    if (Platform.OS === 'web') {
+      onError?.(
+        'Google sign-in needs EXPO_PUBLIC_GOOGLE_CLIENT_ID in mobile/.env (Web OAuth client). Restart Expo after setting it.',
+      );
+      return;
+    }
+    const envVar =
+      Platform.OS === 'android'
+        ? 'EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID'
+        : 'EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID';
+    onError?.(
+      `Google sign-in needs EXPO_PUBLIC_GOOGLE_CLIENT_ID and ${envVar}. Use email sign-in for now.`,
+    );
+  };
+
+  return (
+    <Pressable
+      style={styles.btn}
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+    >
+      <View style={styles.mark}>
+        <Text style={styles.markText}>G</Text>
+      </View>
+      <Text style={styles.label}>{label}</Text>
+    </Pressable>
   );
+}
+
+function ConfiguredGoogleSignInButton({
+  label = 'Continue with Google',
+  onSuccess,
+  onError,
+  webClientId,
+  iosClientId,
+  androidClientId,
+}: Props & {
+  webClientId: string;
+  iosClientId: string;
+  androidClientId: string;
+}) {
+  const { loginWithGoogle } = useAuth();
+  const [busy, setBusy] = useState(false);
+
+  const [request, response, promptAsync] = Google.useIdTokenAuthRequest({
+    clientId: webClientId,
+    webClientId,
+    iosClientId: isRealClientId(iosClientId) ? iosClientId : undefined,
+    androidClientId: isRealClientId(androidClientId) ? androidClientId : undefined,
+  });
 
   useEffect(() => {
     let cancelled = false;
@@ -54,7 +117,6 @@ export function GoogleSignInButton({
       }
 
       const idToken = response.params?.id_token || response.authentication?.idToken;
-
       if (!idToken) {
         onError?.('Google did not return an ID token');
         return;
@@ -78,18 +140,6 @@ export function GoogleSignInButton({
   }, [response, loginWithGoogle, onSuccess, onError]);
 
   const onPress = async () => {
-    if (!webClientId) {
-      onError?.('Google sign-in is not configured (missing EXPO_PUBLIC_GOOGLE_CLIENT_ID)');
-      return;
-    }
-    if (!platformClientId) {
-      const envVar =
-        Platform.OS === 'android'
-          ? 'EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID'
-          : 'EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID';
-      onError?.(`Google sign-in needs ${envVar} on ${Platform.OS}. Use email sign-up for now.`);
-      return;
-    }
     setBusy(true);
     try {
       const result = await promptAsync();
@@ -104,9 +154,9 @@ export function GoogleSignInButton({
 
   return (
     <Pressable
-      style={[styles.btn, (busy || (isConfigured && !request)) && styles.btnDisabled]}
+      style={[styles.btn, (busy || !request) && styles.btnDisabled]}
       onPress={onPress}
-      disabled={busy || (isConfigured && !request)}
+      disabled={busy || !request}
       accessibilityRole="button"
       accessibilityLabel={label}
     >
