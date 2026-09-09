@@ -21,15 +21,16 @@ API Gateway :3000
   - /api/auth     -> Auth Service
   - /api/gear     -> Core Service
   - /api/listings -> Core Service (JWT required)
+  - /api/bookings -> Core Service (JWT required)
         |                         |
         v                         v
 Auth Service :3001          Core Service :3002
-  Users, passwords, JWT       Listings, near-you search
+  Users, passwords, JWT       Listings, bookings, quotes
   DDD / Clean Architecture    DDD / Clean Architecture
         |                         |
         v                         v
 Postgres bivvy_auth         Postgres bivvy_core
-Redis (refresh tokens)      (persistence Planned)
+Redis (refresh Planned)     (Postgres when DATABASE_URL reachable)
 ```
 
 ## Repository layout
@@ -71,6 +72,7 @@ Path rewriting at the gateway:
 | `/api/auth/*` | `auth-service` `/auth/*` |
 | `/api/gear/*` | `core-service` `/gear/*` |
 | `/api/listings/*` | `core-service` `/listings/*` (JWT required at gateway) |
+| `/api/bookings/*` | `core-service` `/bookings/*` (JWT required at gateway) |
 
 ### Planned — messaging
 
@@ -91,24 +93,30 @@ src/
 
 Dependency rule: **inward only**. Domain must not import Express, Helmet, or SQL clients.
 
-### Auth domain (Current / Bootstrap)
+### Auth domain (Current)
 
 | Use case | Responsibility |
 |----------|----------------|
-| `RegisterUser` | Validate email/password, hash password, persist user, issue tokens |
+| `RegisterUser` | Validate email/password/terms, hash password, persist user, issue tokens |
 | `LoginUser` | Verify credentials, issue tokens |
+| `LoginWithGoogle` | Verify Google ID token, upsert user, issue tokens |
 | `RefreshSession` | Rotate refresh token, issue new pair |
+| `GetCurrentUser` | Return public profile for `/auth/me` |
 
-Persistence today: **Postgres** via `PostgresUserRepository` (`bivvy_auth`), with `InMemoryUserRepository` as the fallback when `DATABASE_URL` is unset (tests and quick local runs).
+JWT claims include `sub`, `email`, `role` (`renter` \| `owner` \| `both`), and `name`. Persistence: **Postgres** via `PostgresUserRepository` (`bivvy_auth`), with in-memory fallback when `DATABASE_URL` is unset.
 
-### Core domain (Current / Bootstrap)
+### Core domain (Current)
 
 | Use case | Responsibility |
 |----------|----------------|
-| `ListNearYou` | Filter listings by category / distance |
-| `CreateListing` | Create a new gear listing |
+| `ListNearYou` | Filter by category / mode / query / ZIP / distance |
+| `GetListingById` | Fetch a single listing |
+| `CreateListing` / `ListOwnerListings` | Owner create and list |
+| `QuoteBooking` | Transparent rental/buy price breakdown |
+| `CreateBooking` / `ListBookings` / `UpdateBookingStatus` | Booking lifecycle |
+| `SimulateCheckout` | Simulated payment for accepted bookings |
 
-Persistence today: **in-memory** seed data (`4-Person Blackout Tent`, `60L Alpine Backpack`).
+Persistence: **in-memory** seed (10 Seattle listings) by default; **Postgres** adapters when `DATABASE_URL` is reachable (`USE_IN_MEMORY=1` forces memory).
 
 ### API Gateway
 

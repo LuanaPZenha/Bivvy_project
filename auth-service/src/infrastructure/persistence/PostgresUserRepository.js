@@ -16,6 +16,7 @@ function toUser(row) {
     name: row.name,
     phone: row.phone,
     googleSub: row.google_sub,
+    role: row.role || 'both',
     acceptedTermsAt: row.accepted_terms_at,
     createdAt: row.created_at,
   });
@@ -52,14 +53,15 @@ class PostgresUserRepository {
   async save(user) {
     const entity = user instanceof User ? user : new User(user);
     const { rows } = await this.pool.query(
-      `INSERT INTO users (id, email, password_hash, name, phone, google_sub, accepted_terms_at, created_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+      `INSERT INTO users (id, email, password_hash, name, phone, google_sub, role, accepted_terms_at, created_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
        ON CONFLICT (id) DO UPDATE SET
          email = EXCLUDED.email,
          password_hash = EXCLUDED.password_hash,
          name = EXCLUDED.name,
          phone = EXCLUDED.phone,
          google_sub = EXCLUDED.google_sub,
+         role = EXCLUDED.role,
          accepted_terms_at = EXCLUDED.accepted_terms_at
        RETURNING *`,
       [
@@ -69,6 +71,7 @@ class PostgresUserRepository {
         entity.name,
         entity.phone,
         entity.googleSub,
+        entity.role,
         entity.acceptedTermsAt,
         entity.createdAt,
       ],

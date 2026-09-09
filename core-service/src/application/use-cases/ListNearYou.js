@@ -5,14 +5,24 @@ class ListNearYou {
     this.listingRepository = listingRepository;
   }
 
-  async execute({ category = 'all', maxDistanceMiles = 25 } = {}) {
+  async execute({
+    category = 'all',
+    mode = 'all',
+    query = '',
+    maxDistanceMiles = 25,
+    zipCode = null,
+  } = {}) {
     const listings = await this.listingRepository.findNear({
       category,
-      maxDistanceMiles,
+      mode,
+      query,
+      maxDistanceMiles: Number(maxDistanceMiles) || 25,
+      zipCode: zipCode || null,
     });
     return {
       count: listings.length,
-      listings,
+      zipCode: zipCode || null,
+      listings: listings.map((l) => (typeof l.toJSON === 'function' ? l.toJSON() : l)),
     };
   }
 }

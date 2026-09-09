@@ -1,10 +1,21 @@
 'use strict';
 
 const { createApp } = require('./app');
+const { createCoreRepositories } = require('./infrastructure/persistence/createRepositories');
 
-const port = Number(process.env.PORT) || 3002;
-const app = createApp();
+async function main() {
+  const port = Number(process.env.PORT) || 3002;
+  const repos = await createCoreRepositories();
+  const app = createApp({
+    listingRepository: repos.listingRepository,
+    bookingRepository: repos.bookingRepository,
+  });
+  app.listen(port, () => {
+    console.log(`Bivvy Core Service listening on :${port} (persistence=${repos.persistence})`);
+  });
+}
 
-app.listen(port, () => {
-  console.log(`Bivvy Core Service listening on :${port}`);
+main().catch((err) => {
+  console.error('[core-service] failed to start', err);
+  process.exit(1);
 });

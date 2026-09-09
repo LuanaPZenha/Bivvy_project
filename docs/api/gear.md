@@ -1,41 +1,45 @@
 # Gear & Listings API
 
-Listing discovery and creation via the API Gateway.
+Listing discovery, creation, quotes, and bookings via the API Gateway.
 
 ## GET `/api/gear/near`
 
-Return nearby gear listings. **Public** (no JWT) in the bootstrap.
+Return nearby gear listings. **Public** (no JWT).
 
 ### Query parameters
 
 | Param | Type | Default | Description |
 |-------|------|---------|-------------|
-| `category` | string | `all` | `all` \| `camping` \| `backpacks` \| `water` |
+| `category` | string | `all` | `all` \| `camping` \| `hiking` \| `climbing` \| `water` \| `snow` \| `bikes` |
+| `mode` | string | `all` | `all` \| `rent` \| `buy` |
+| `q` / `query` | string | _(empty)_ | Case-insensitive search |
 | `maxDistance` | number | `25` | Max distance in miles |
-
-### Example
-
-```bash
-curl "http://localhost:3000/api/gear/near?category=camping&maxDistance=10"
-```
+| `zip` / `zipCode` | string | _(none)_ | Recalculate distance from a Seattle-area ZIP |
 
 ### Response **200**
 
 ```json
 {
   "count": 1,
+  "zipCode": "98103",
   "listings": [
     {
       "id": "lst_tent_1",
       "title": "4-Person Blackout Tent",
       "category": "camping",
+      "mode": "rent",
       "pricePerDay": 28,
+      "buyPrice": null,
       "distanceMiles": 1.2,
       "rating": 4.9,
       "reviewCount": 86,
       "ownerName": "Mara T.",
+      "ownerId": "owner_mara",
       "isPro": true,
-      "location": "Seattle, WA"
+      "location": "Fremont, Seattle",
+      "zipCode": "98103",
+      "thumbnailTone": "forest",
+      "description": "Roomy blackout tent…"
     }
   ]
 }
@@ -43,52 +47,72 @@ curl "http://localhost:3000/api/gear/near?category=camping&maxDistance=10"
 
 ---
 
+## GET `/api/gear/:id`
+
+Return a single listing. **Public**. Returns **404** when unknown.
+
+---
+
+## POST `/api/gear/:id/quote`
+
+Price a rental or buy without creating a booking. **Public**.
+
+```json
+{ "startDate": "2026-09-20", "endDate": "2026-09-23" }
+```
+
+Response includes `pricing` with `days`, `subtotal`, `serviceFee` (10%), `tax` (~8.05%), and `total`.
+
+---
+
 ## POST `/api/listings`
 
-Create a listing. **Requires** `Authorization: Bearer <accessToken>` at the gateway.
+Create a listing. **Requires** `Authorization: Bearer <accessToken>`.
+Gateway forwards `X-User-Id` / `X-User-Email` / `X-User-Role` / `X-User-Name` to Core.
 
-### Request
+Rent listings require `pricePerDay`. Buy listings require `buyPrice`. Domain validation failures return **400**.
+
+---
+
+## GET `/api/listings/mine`
+
+Listings owned by the authenticated user. **Requires JWT**.
+
+---
+
+## Bookings
+
+### POST `/api/bookings` (JWT)
 
 ```json
 {
-  "title": "Inflatable Kayak",
-  "category": "water",
-  "pricePerDay": 35,
-  "distanceMiles": 2.1,
-  "ownerName": "Sam R.",
-  "isPro": false,
-  "location": "Seattle, WA"
+  "listingId": "lst_tent_1",
+  "startDate": "2026-09-20",
+  "endDate": "2026-09-23",
+  "message": "Need it for a weekend trek."
 }
 ```
 
-| Field | Required | Notes |
-|-------|----------|-------|
-| `title` | Yes | Listing title |
-| `pricePerDay` | Yes | Number |
-| `category` | No | Defaults to `camping` |
-| `distanceMiles` | No | Defaults to `0` |
-| `ownerName` | No | Defaults to `You` |
-| `isPro` | No | Boolean |
-| `location` | No | Defaults to `Seattle, WA` |
+Creates a `requested` booking. Rejects overlaps (**409**) and self-booking (**400**).
 
-### Responses
+### GET `/api/bookings` (JWT)
 
-**201 Created** — listing object (includes generated `id`).
+Bookings where the caller is the renter or the owner.
 
-| Status | Error | When |
-|--------|-------|------|
-| 401 | `Unauthorized` / `Invalid or expired token` | Missing/bad JWT at gateway |
-| 500 | `Internal server error` / `Listing requires title and pricePerDay` | Domain validation failure* |
+### PATCH `/api/bookings/:id` (JWT)
 
-\*Domain errors currently may surface as 500 depending on error mapping — improving to 400 is **Planned**.
+```json
+{ "status": "accepted" }
+```
+
+Owners: `accepted` / `declined` / `completed`. Renters or owners: `cancelled` when allowed.
+
+### POST `/api/bookings/:id/checkout` (JWT)
+
+Simulated checkout for an **accepted** booking (renter only). Marks `completed` and attaches a `bivvy_sim` payment receipt.
 
 ---
 
 ## Seed data (Bootstrap)
 
-Core ships with two in-memory listings used by the mobile home screen mock parity:
-
-1. `4-Person Blackout Tent` (Pro, camping)
-2. `60L Alpine Backpack` (backpacks)
-
-See [Core Service](../services/core-service.md).
+Core ships with ten Seattle-area listings (rent + buy) aligned with the mobile catalog.

@@ -145,6 +145,32 @@ Rotate refresh token and issue a new access/refresh pair.
 
 ---
 
+## GET `/api/auth/me`
+
+Return the authenticated user's public profile. **Requires** `Authorization: Bearer <accessToken>`.
+
+### Responses
+
+**200 OK**
+
+```json
+{
+  "user": {
+    "id": "uuid",
+    "email": "hiker@example.com",
+    "name": "Alex",
+    "phone": null,
+    "role": "both",
+    "acceptedTermsAt": "2026-09-09T00:00:00.000Z",
+    "createdAt": "2026-09-09T00:00:00.000Z"
+  }
+}
+```
+
+Access JWT claims include `sub`, `email`, `role`, and `name`.
+
+---
+
 ## Security notes
 
 - Passwords are hashed with bcrypt before persistence.

@@ -13,6 +13,7 @@ const { RegisterUser } = require('./application/use-cases/RegisterUser');
 const { LoginUser } = require('./application/use-cases/LoginUser');
 const { LoginWithGoogle } = require('./application/use-cases/LoginWithGoogle');
 const { RefreshSession } = require('./application/use-cases/RefreshSession');
+const { GetCurrentUser } = require('./application/use-cases/GetCurrentUser');
 const { AuthController } = require('./interfaces/http/controllers/AuthController');
 const { createAuthRouter } = require('./interfaces/http/routes/authRoutes');
 
@@ -42,21 +43,25 @@ function createApp(overrides = {}) {
     googleTokenVerifier,
   });
   const refreshSession = new RefreshSession({ tokenService });
+  const getCurrentUser = new GetCurrentUser({ userRepository });
   const controller = new AuthController({
     registerUser,
     loginUser,
     refreshSession,
     loginWithGoogle,
+    getCurrentUser,
   });
 
   const app = express();
   app.disable('x-powered-by');
   app.use(helmet());
-  applySanitization(app);
   app.use(express.json({ limit: '50kb' }));
+  applySanitization(app);
 
   app.get('/health', (_req, res) => res.json({ status: 'ok', service: 'auth-service' }));
   app.use('/auth', createAuthRouter(controller));
+
+  app.use((_req, res) => res.status(404).json({ error: 'Not found' }));
 
   // eslint-disable-next-line no-unused-vars
   app.use((err, _req, res, _next) => {

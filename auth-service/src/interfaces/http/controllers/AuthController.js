@@ -1,11 +1,12 @@
 'use strict';
 
 class AuthController {
-  constructor({ registerUser, loginUser, refreshSession, loginWithGoogle }) {
+  constructor({ registerUser, loginUser, refreshSession, loginWithGoogle, getCurrentUser }) {
     this.registerUser = registerUser;
     this.loginUser = loginUser;
     this.refreshSession = refreshSession;
     this.loginWithGoogle = loginWithGoogle;
+    this.getCurrentUser = getCurrentUser;
   }
 
   register = async (req, res, next) => {
@@ -38,6 +39,15 @@ class AuthController {
   refresh = async (req, res, next) => {
     try {
       const result = await this.refreshSession.execute(req.body);
+      res.status(200).json(result);
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  me = async (req, res, next) => {
+    try {
+      const result = await this.getCurrentUser.execute({ userId: req.auth.userId });
       res.status(200).json(result);
     } catch (err) {
       next(err);

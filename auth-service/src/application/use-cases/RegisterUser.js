@@ -17,7 +17,7 @@ class RegisterUser {
     this.tokenService = tokenService;
   }
 
-  async execute({ email, password, name, phone, acceptTerms }) {
+  async execute({ email, password, name, phone, acceptTerms, role }) {
     if (!password || password.length < MIN_PASSWORD_LENGTH) {
       throw badRequest(`Password must be at least ${MIN_PASSWORD_LENGTH} characters`);
     }
@@ -43,6 +43,7 @@ class RegisterUser {
       passwordHash,
       name: (name || '').trim() || emailVo.value.split('@')[0],
       phone: phoneVo ? phoneVo.value : null,
+      role: role || 'both',
       acceptedTermsAt: new Date(),
     });
 

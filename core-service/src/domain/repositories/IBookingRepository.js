@@ -1,21 +1,21 @@
 'use strict';
 
-class IListingRepository {
-  async findNear(_filters) {
-    throw new Error('Not implemented');
-  }
-
+class IBookingRepository {
   async findById(_id) {
     throw new Error('Not implemented');
   }
 
-  async findByOwnerId(_ownerId) {
+  async findForUser(_userId) {
     throw new Error('Not implemented');
   }
 
-  async save(_listing) {
+  async findActiveForListing(_listingId) {
+    throw new Error('Not implemented');
+  }
+
+  async save(_booking) {
     throw new Error('Not implemented');
   }
 }
 
-module.exports = { IListingRepository };
+module.exports = { IBookingRepository };
