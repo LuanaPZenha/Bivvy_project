@@ -213,6 +213,30 @@ export function BookingRequestScreen({ navigation, route }: BookingRequestScreen
 
         {listing.mode === 'rent' ? (
           <View style={styles.formBlock}>
+            <Text style={styles.presetLabel}>Quick dates</Text>
+            <View style={styles.presetRow}>
+              {[
+                { label: 'Weekend', days: 2 },
+                { label: '3 days', days: 3 },
+                { label: 'Week', days: 7 },
+              ].map((preset) => (
+                <Pressable
+                  key={preset.label}
+                  style={styles.presetChip}
+                  onPress={() => {
+                    const start = defaultStartDate();
+                    const end = new Date(`${start}T00:00:00Z`);
+                    end.setUTCDate(end.getUTCDate() + preset.days);
+                    setStartDate(start);
+                    setEndDate(toIsoDate(end));
+                  }}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Set ${preset.label}`}
+                >
+                  <Text style={styles.presetText}>{preset.label}</Text>
+                </Pressable>
+              ))}
+            </View>
             <FormField
               label="Start date (YYYY-MM-DD)"
               value={startDate}
@@ -229,6 +253,12 @@ export function BookingRequestScreen({ navigation, route }: BookingRequestScreen
               autoCorrect={false}
               placeholder="2026-09-12"
             />
+            {(listing.blockedDates || []).length > 0 ? (
+              <Text style={styles.blockedHint}>
+                Unavailable: {(listing.blockedDates || []).slice(0, 6).join(', ')}
+                {(listing.blockedDates || []).length > 6 ? '…' : ''}
+              </Text>
+            ) : null}
           </View>
         ) : (
           <Text style={styles.buyHint}>
@@ -344,6 +374,38 @@ const styles = StyleSheet.create({
   },
   formBlock: {
     gap: 4,
+  },
+  presetLabel: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: colors.ink,
+    marginBottom: 8,
+  },
+  presetRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: spacing.sm,
+  },
+  presetChip: {
+    borderRadius: radii.pill,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.creamCard,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  presetText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: colors.forest,
+  },
+  blockedHint: {
+    marginTop: 4,
+    marginBottom: spacing.sm,
+    fontSize: 13,
+    color: colors.danger,
+    lineHeight: 18,
   },
   buyHint: {
     fontSize: 14,

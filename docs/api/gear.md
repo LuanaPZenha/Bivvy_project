@@ -15,6 +15,7 @@ Return nearby gear listings. **Public** (no JWT).
 | `q` / `query` | string | _(empty)_ | Case-insensitive search |
 | `maxDistance` | number | `25` | Max distance in miles |
 | `zip` / `zipCode` | string | _(none)_ | Recalculate distance from a Seattle-area ZIP |
+| `sort` / `sortBy` | string | `distance` | `distance` \| `price_asc` \| `price_desc` \| `rating` |
 
 ### Response **200**
 
@@ -22,6 +23,7 @@ Return nearby gear listings. **Public** (no JWT).
 {
   "count": 1,
   "zipCode": "98103",
+  "sortBy": "distance",
   "listings": [
     {
       "id": "lst_tent_1",
@@ -140,6 +142,24 @@ Listings owned by the authenticated user. **Requires JWT**.
 
 ---
 
+## PATCH `/api/listings/:id` (JWT)
+
+Update an owned listing (title, category, mode, prices, description, ZIP, blocked dates, Pro flag). **403** if not owner. **404** if missing.
+
+---
+
+## DELETE `/api/listings/:id` (JWT)
+
+Delete an owned listing and its local image files. **403** if not owner.
+
+---
+
+## DELETE `/api/listings/:id/images/:imageId` (JWT)
+
+Remove one image from an owned listing.
+
+---
+
 ## POST `/api/cart/checkout` (JWT)
 
 Create a **buy** booking request for each cart listing id. Does **not** charge payment — sellers still accept, then the buyer uses `POST /api/bookings/:id/checkout`.
@@ -174,7 +194,7 @@ Creates a `requested` booking. Rejects overlaps (**409**) and self-booking (**40
 
 ### GET `/api/bookings` (JWT)
 
-Bookings where the caller is the renter or the owner.
+Bookings where the caller is the renter or the owner. Each booking includes an optional `listing` summary (`id`, `title`, `mode`, `category`, first image) when the listing still exists.
 
 ### PATCH `/api/bookings/:id` (JWT)
 

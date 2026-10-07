@@ -8,6 +8,8 @@ import { colors, radii, spacing } from '../theme/tokens';
 type Props = {
   listing: Listing;
   onPress?: () => void;
+  favorited?: boolean;
+  onToggleFavorite?: () => void;
 };
 
 function categoryIcon(category: Listing['category']): keyof typeof Ionicons.glyphMap {
@@ -29,7 +31,7 @@ function categoryIcon(category: Listing['category']): keyof typeof Ionicons.glyp
   }
 }
 
-export function ListingCard({ listing, onPress }: Props) {
+export function ListingCard({ listing, onPress, favorited, onToggleFavorite }: Props) {
   const thumbBg = listing.thumbnailTone === 'forest' ? colors.forestMid : '#6B4F3A';
   const imageUri = primaryListingImageUrl(listing);
 
@@ -50,6 +52,25 @@ export function ListingCard({ listing, onPress }: Props) {
           <View style={styles.proBadge}>
             <Text style={styles.proText}>PRO</Text>
           </View>
+        ) : null}
+        {onToggleFavorite ? (
+          <Pressable
+            style={styles.favBtn}
+            onPress={(e) => {
+              const event = e as unknown as { stopPropagation?: () => void };
+              event.stopPropagation?.();
+              onToggleFavorite();
+            }}
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel={favorited ? 'Remove from saved' : 'Save listing'}
+          >
+            <Ionicons
+              name={favorited ? 'heart' : 'heart-outline'}
+              size={18}
+              color={favorited ? colors.danger : colors.cream}
+            />
+          </Pressable>
         ) : null}
       </View>
 
@@ -122,6 +143,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 4,
+  },
+  favBtn: {
+    position: 'absolute',
+    bottom: 8,
+    right: 8,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: 'rgba(20, 28, 22, 0.45)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   proText: {
     fontSize: 10,

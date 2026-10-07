@@ -27,18 +27,19 @@ Defined in `mobile/src/theme/tokens.ts`:
 
 ## Explore composition (Current)
 
-1. **Header (forest)** — logo + `BIVVY`, cart icon (badge), notification bell, “Picking up near **{Seattle ZIP label}**” (tap cycles ZIPs), search field, gold filter button.
+1. **Header (forest)** — logo + `BIVVY`, cart icon (badge), notification bell (opens activity feed; badge only when active bookings exist), “Picking up near **{Seattle ZIP label}**” (tap cycles ZIPs), search field, gold filter button (distance + sort sheet).
 2. **Offline banner** — shown when Near You falls back to mock data; tap retries the API.
 3. **Rent \| Buy toggle** — filters listings by market mode.
 4. **Category chips** — `All gear`, `Camping`, `Hiking`, `Climbing`, `Water`, `Snow`, `Bikes`.
-5. **Bivvy Pro banner** — insured premium listings CTA + `Upgrade`.
-6. **Near You** — listing cards with photo (or tone placeholder), owner, stars, `$ / day` or buy price, miles; tap opens detail.
+5. **Bivvy Pro banner** — marketing CTA; Upgrade explains Pro is planned (no billing yet).
+6. **Near You** — listing cards with photo (or tone placeholder), save heart, owner, stars, `$ / day` or buy price, miles; tap opens detail.
 
 ## Detail, booking & profile
 
-- Detail CTA labels: **Request rental** / **Buy now** + **Add to cart**.
-- Profile rows: **Cart**, **My rentals**, **My listings** (auth required for rentals/listings).
-- My listings supports **Add photo**.
+- Detail CTA labels: **Request rental** / **Buy now** + **Add to cart**; heart saves to **Saved gear**.
+- Booking: quick date presets (weekend / 3 days / week) and blocked-date hint when present.
+- Profile rows: **Cart**, **Saved gear**, **Notifications**, **My rentals**, **My listings** (auth required for rentals/listings/notifications feed).
+- My listings supports **Add photo**, **Edit**, and **Delete**.
 - Auth copy stays English; errors surface gateway messages when available.
 - Register is the default auth entry (email/password). Google **Continue with Google** is mounted on Login and Register; it needs `EXPO_PUBLIC_GOOGLE_CLIENT_ID` (and native client ids on device).
 ## Copy examples (English)

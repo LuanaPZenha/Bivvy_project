@@ -1,7 +1,12 @@
 import React from 'react';
-import { renderHook, act } from '@testing-library/react-native';
+import { renderHook, act, waitFor } from '@testing-library/react-native';
 import { CartProvider, useCart } from '../../src/cart/CartContext';
 import type { Listing } from '../../src/types/listing';
+
+jest.mock('../../src/storage/localStore', () => ({
+  loadJson: jest.fn(async (_key: string, fallback: unknown) => fallback),
+  saveJson: jest.fn(async () => undefined),
+}));
 
 const buyListing: Listing = {
   id: 'lst_buy',
@@ -32,8 +37,9 @@ function wrapper({ children }: { children: React.ReactNode }) {
 }
 
 describe('CartContext', () => {
-  test('adds buy listings and rejects rent listings', () => {
+  test('adds buy listings and rejects rent listings', async () => {
     const { result } = renderHook(() => useCart(), { wrapper });
+    await waitFor(() => expect(result.current.ready).toBe(true));
 
     act(() => {
       const ok = result.current.addItem(buyListing);

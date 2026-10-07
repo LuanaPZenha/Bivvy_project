@@ -26,4 +26,12 @@ describe('ListNearYou use case', () => {
     expect(result.listings.every((l) => l.mode === 'rent')).toBe(true);
     expect(result.listings.every((l) => l.title.toLowerCase().includes('tent'))).toBe(true);
   });
+
+  it('sorts by price ascending', async () => {
+    const useCase = new ListNearYou({ listingRepository: new InMemoryListingRepository() });
+    const result = await useCase.execute({ mode: 'rent', sortBy: 'price_asc' });
+    expect(result.sortBy).toBe('price_asc');
+    const prices = result.listings.map((l) => l.pricePerDay);
+    expect(prices).toEqual([...prices].sort((a, b) => a - b));
+  });
 });

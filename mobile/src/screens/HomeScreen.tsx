@@ -1,14 +1,18 @@
-import React from 'react';
-import { View, Text, ScrollView, StyleSheet, ActivityIndicator, Pressable } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, ScrollView, StyleSheet, ActivityIndicator, Pressable, Alert } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { HomeHeader } from '../components/HomeHeader';
 import { CategoryChips } from '../components/CategoryChips';
 import { ModeToggle } from '../components/ModeToggle';
 import { ProBanner } from '../components/ProBanner';
 import { ListingCard } from '../components/ListingCard';
+import { FilterSheet } from '../components/FilterSheet';
 import { useListings } from '../hooks/useListings';
 import { useCart } from '../cart/CartContext';
+import { useAuth } from '../auth/AuthContext';
+import { useFavorites } from '../favorites/FavoritesContext';
 import { useRootNavigation } from '../navigation/useRootNavigation';
+import { fetchMyBookings } from '../services/api';
 import { labelForZip, nextSeattleZip } from '../data/seattleZips';
 import { colors, spacing } from '../theme/tokens';
 import type { HomeScreenProps } from '../navigation/types';
@@ -23,6 +27,10 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
     setQuery,
     zipCode,
     setZipCode,
+    maxDistance,
+    setMaxDistance,
+    sortBy,
+    setSortBy,
     listings,
     count,
     isLoading,
@@ -30,9 +38,37 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
     reload,
   } = useListings();
   const { count: cartCount } = useCart();
+  const { isAuthenticated } = useAuth();
+  const { isFavorite, toggleFavorite } = useFavorites();
   const rootNav = useRootNavigation();
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [draftDistance, setDraftDistance] = useState(maxDistance);
+  const [draftSort, setDraftSort] = useState(sortBy);
+  const [notificationCount, setNotificationCount] = useState(0);
 
   const locationLabel = labelForZip(zipCode);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      if (!isAuthenticated) {
+        if (!cancelled) setNotificationCount(0);
+        return;
+      }
+      try {
+        const result = await fetchMyBookings();
+        const active = (result.bookings || []).filter((b) =>
+          ['requested', 'accepted'].includes(b.status),
+        ).length;
+        if (!cancelled) setNotificationCount(active);
+      } catch {
+        if (!cancelled) setNotificationCount(0);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [isAuthenticated, listings.length]);
 
   return (
     <View style={styles.root}>
@@ -43,7 +79,14 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
         onSearchChange={setQuery}
         onLocationPress={() => setZipCode(nextSeattleZip(zipCode))}
         onCartPress={() => rootNav.navigate('Cart')}
+        onNotificationsPress={() => rootNav.navigate('Notifications')}
+        onFilterPress={() => {
+          setDraftDistance(maxDistance);
+          setDraftSort(sortBy);
+          setFiltersOpen(true);
+        }}
         cartCount={cartCount}
+        notificationCount={notificationCount}
       />
       <ModeToggle value={mode} onChange={setMode} />
       <ScrollView
@@ -65,11 +108,20 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
         ) : null}
 
         <CategoryChips selected={category} onSelect={setCategory} />
-        <ProBanner />
+        <ProBanner
+          onUpgrade={() =>
+            Alert.alert(
+              'Bivvy Pro',
+              'Pro listing boosts and insured gear over $500 are planned. You can still list gear today from Profile → My listings.',
+            )
+          }
+        />
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>NEAR YOU</Text>
           <Text style={styles.sectionMeta}>
-            {isLoading ? 'Loading…' : `${count} listing${count === 1 ? '' : 's'}`}
+            {isLoading
+              ? 'Loading…'
+              : `${count} listing${count === 1 ? '' : 's'} · ≤${maxDistance} mi`}
           </Text>
         </View>
         {isLoading && listings.length === 0 ? (
@@ -80,7 +132,7 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
           <View style={styles.empty} accessibilityLabel="No listings found">
             <Text style={styles.emptyTitle}>No gear nearby</Text>
             <Text style={styles.emptyBody}>
-              Try another category, ZIP, or switch between Rent and Buy.
+              Try another category, ZIP, wider distance, or switch between Rent and Buy.
             </Text>
           </View>
         ) : (
@@ -88,11 +140,27 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
             <ListingCard
               key={item.id}
               listing={item}
+              favorited={isFavorite(item.id)}
+              onToggleFavorite={() => toggleFavorite(item)}
               onPress={() => navigation.navigate('ListingDetail', { listingId: item.id })}
             />
           ))
         )}
       </ScrollView>
+
+      <FilterSheet
+        visible={filtersOpen}
+        maxDistance={draftDistance}
+        sortBy={draftSort}
+        onChangeMaxDistance={setDraftDistance}
+        onChangeSortBy={setDraftSort}
+        onClose={() => setFiltersOpen(false)}
+        onApply={() => {
+          setMaxDistance(draftDistance);
+          setSortBy(draftSort);
+          setFiltersOpen(false);
+        }}
+      />
     </View>
   );
 }

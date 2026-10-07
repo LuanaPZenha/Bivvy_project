@@ -65,6 +65,16 @@ export function ProfileScreen() {
           onPress={() => rootNav.navigate('Cart')}
         />
         <NavRow
+          icon="heart-outline"
+          label="Saved gear"
+          onPress={() => rootNav.navigate('Favorites')}
+        />
+        <NavRow
+          icon="notifications-outline"
+          label="Notifications"
+          onPress={() => rootNav.navigate('Notifications')}
+        />
+        <NavRow
           icon="calendar-outline"
           label="My rentals"
           onPress={() => openProtected('MyRentals')}

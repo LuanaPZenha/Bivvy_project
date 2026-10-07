@@ -18,8 +18,13 @@ function createListingsRouter(controller) {
   const router = Router();
   router.get('/mine', requireUser, (req, res, next) => controller.mine(req, res, next));
   router.post('/', requireUser, (req, res, next) => controller.create(req, res, next));
+  router.patch('/:id', requireUser, (req, res, next) => controller.update(req, res, next));
+  router.delete('/:id', requireUser, (req, res, next) => controller.remove(req, res, next));
   router.post('/:id/images', requireUser, listingImageUpload, (req, res, next) =>
     controller.addImage(req, res, next),
+  );
+  router.delete('/:id/images/:imageId', requireUser, (req, res, next) =>
+    controller.removeImage(req, res, next),
   );
   return router;
 }

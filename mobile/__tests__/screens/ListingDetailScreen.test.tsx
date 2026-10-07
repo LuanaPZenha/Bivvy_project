@@ -3,6 +3,7 @@ import { render, fireEvent, waitFor } from '@testing-library/react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ListingDetailScreen } from '../../src/screens/ListingDetailScreen';
 import { CartProvider } from '../../src/cart/CartContext';
+import { FavoritesProvider } from '../../src/favorites/FavoritesContext';
 import { MOCK_LISTINGS } from '../../src/types/listing';
 import { fetchListingById } from '../../src/services/api';
 
@@ -12,6 +13,11 @@ jest.mock('../../src/services/api', () => ({
 
 jest.mock('../../src/navigation/useRootNavigation', () => ({
   useRootNavigation: () => ({ navigate: jest.fn() }),
+}));
+
+jest.mock('../../src/storage/localStore', () => ({
+  loadJson: jest.fn(async (_key: string, fallback: unknown) => fallback),
+  saveJson: jest.fn(async () => undefined),
 }));
 
 const mockedFetchListingById = fetchListingById as jest.MockedFunction<typeof fetchListingById>;
@@ -28,9 +34,11 @@ function renderDetail(listingId: string, navigation = { goBack: jest.fn(), navig
         insets: { top: 47, left: 0, right: 0, bottom: 34 },
       }}
     >
-      <CartProvider>
-        <ListingDetailScreen {...props} />
-      </CartProvider>
+      <FavoritesProvider>
+        <CartProvider>
+          <ListingDetailScreen {...props} />
+        </CartProvider>
+      </FavoritesProvider>
     </SafeAreaProvider>,
   );
 }

@@ -14,6 +14,8 @@ const { LocalImageStore } = require('./infrastructure/storage/LocalImageStore');
 const { ListNearYou } = require('./application/use-cases/ListNearYou');
 const { GetListingById } = require('./application/use-cases/GetListingById');
 const { CreateListing } = require('./application/use-cases/CreateListing');
+const { UpdateListing } = require('./application/use-cases/UpdateListing');
+const { DeleteListing } = require('./application/use-cases/DeleteListing');
 const { ListOwnerListings } = require('./application/use-cases/ListOwnerListings');
 const { CreateBooking } = require('./application/use-cases/CreateBooking');
 const { ListBookings } = require('./application/use-cases/ListBookings');
@@ -21,6 +23,7 @@ const { UpdateBookingStatus } = require('./application/use-cases/UpdateBookingSt
 const { QuoteBooking } = require('./application/use-cases/QuoteBooking');
 const { SimulateCheckout } = require('./application/use-cases/SimulateCheckout');
 const { AddListingImage } = require('./application/use-cases/AddListingImage');
+const { RemoveListingImage } = require('./application/use-cases/RemoveListingImage');
 const { GetListingImage } = require('./application/use-cases/GetListingImage');
 const { CheckoutCart } = require('./application/use-cases/CheckoutCart');
 const { GearController } = require('./interfaces/http/controllers/GearController');
@@ -45,13 +48,16 @@ function createApp(overrides = {}) {
     listNearYou: new ListNearYou({ listingRepository }),
     getListingById: new GetListingById({ listingRepository }),
     createListing: new CreateListing({ listingRepository }),
+    updateListing: new UpdateListing({ listingRepository }),
+    deleteListing: new DeleteListing({ listingRepository, imageStore }),
     listOwnerListings: new ListOwnerListings({ listingRepository }),
     createBooking: new CreateBooking({ listingRepository, bookingRepository }),
-    listBookings: new ListBookings({ bookingRepository }),
+    listBookings: new ListBookings({ bookingRepository, listingRepository }),
     updateBookingStatus: new UpdateBookingStatus({ bookingRepository }),
     quoteBooking: new QuoteBooking({ listingRepository }),
     simulateCheckout: new SimulateCheckout({ bookingRepository }),
     addListingImage: new AddListingImage({ listingRepository, imageStore }),
+    removeListingImage: new RemoveListingImage({ listingRepository, imageStore }),
     getListingImage: new GetListingImage({ listingRepository, imageStore }),
     checkoutCart: new CheckoutCart({ listingRepository, bookingRepository }),
   });

@@ -11,10 +11,10 @@ Gear listings, discovery, quotes, and bookings. Built with DDD + Clean Architect
 
 ## Responsibilities
 
-- List nearby gear with category / mode / query / ZIP / distance filters.
+- List nearby gear with category / mode / query / ZIP / distance filters and sort (`distance`, `price_asc`, `price_desc`, `rating`).
 - Fetch a listing by id and quote rental/buy pricing.
-- Create listings owned by the authenticated user (identity via gateway headers).
-- Store listing photos on local disk (`UPLOAD_DIR`) and serve them publicly.
+- Create, update, and delete listings owned by the authenticated user (identity via gateway headers).
+- Store listing photos on local disk (`UPLOAD_DIR`), serve them publicly, and allow owners to remove images.
 - Accept booking requests with availability checks and price breakdowns.
 - Cart checkout that creates buy booking requests for multiple listing ids.
 - Simulate checkout for accepted bookings.
@@ -30,8 +30,11 @@ Gear listings, discovery, quotes, and bookings. Built with DDD + Clean Architect
 | `GET` | `/gear/:id/images/:imageId` | Public image binary |
 | `POST` | `/gear/:id/quote` | Public price quote |
 | `POST` | `/listings` | Create listing (`X-User-Id` required) |
+| `PATCH` | `/listings/:id` | Update owned listing |
+| `DELETE` | `/listings/:id` | Delete owned listing |
 | `GET` | `/listings/mine` | Owner's listings |
 | `POST` | `/listings/:id/images` | Owner image upload (multipart) |
+| `DELETE` | `/listings/:id/images/:imageId` | Owner image remove |
 | `POST` | `/bookings` | Create booking request |
 | `GET` | `/bookings` | Caller's bookings |
 | `PATCH` | `/bookings/:id` | Status transition |

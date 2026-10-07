@@ -12,7 +12,9 @@ type Props = {
   onFilterPress?: () => void;
   onLocationPress?: () => void;
   onCartPress?: () => void;
+  onNotificationsPress?: () => void;
   cartCount?: number;
+  notificationCount?: number;
 };
 
 export function HomeHeader({
@@ -22,7 +24,9 @@ export function HomeHeader({
   onFilterPress,
   onLocationPress,
   onCartPress,
+  onNotificationsPress,
   cartCount = 0,
+  notificationCount = 0,
 }: Props) {
   const insets = useSafeAreaInsets();
 
@@ -58,10 +62,19 @@ export function HomeHeader({
               ) : null}
             </View>
           </Pressable>
-          <Pressable accessibilityRole="button" accessibilityLabel="Notifications" hitSlop={12}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={
+              notificationCount
+                ? `Notifications, ${notificationCount} updates`
+                : 'Notifications'
+            }
+            hitSlop={12}
+            onPress={onNotificationsPress}
+          >
             <View>
               <Ionicons name="notifications-outline" size={24} color={colors.cream} />
-              <View style={styles.badge} />
+              {notificationCount > 0 ? <View style={styles.badge} /> : null}
             </View>
           </Pressable>
         </View>

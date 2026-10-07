@@ -149,6 +149,23 @@ export function MyRentalsScreen({ navigation }: MyRentalsScreenProps) {
       );
     }
 
+    if (isOwner && booking.status === 'accepted') {
+      buttons.push(
+        <ActionButton
+          key="complete"
+          label="Mark completed"
+          busy={busy}
+          onPress={() =>
+            runAction(
+              booking.id,
+              () => updateBookingStatusRequest(booking.id, 'completed'),
+              'Marked completed',
+            )
+          }
+        />,
+      );
+    }
+
     if (isRenter && booking.status === 'accepted') {
       buttons.push(
         <ActionButton
@@ -211,21 +228,39 @@ export function MyRentalsScreen({ navigation }: MyRentalsScreenProps) {
             </View>
           ) : (
             bookings.map((booking) => (
-              <View key={booking.id} style={styles.card} accessibilityLabel={`Booking ${booking.id}`}>
+              <Pressable
+                key={booking.id}
+                style={styles.card}
+                accessibilityLabel={booking.listing?.title || `Booking ${booking.id}`}
+                onPress={() =>
+                  navigation.navigate('MainTabs', {
+                    screen: 'Explore',
+                    params: {
+                      screen: 'ListingDetail',
+                      params: { listingId: booking.listingId },
+                    },
+                  })
+                }
+              >
                 <View style={styles.cardHeader}>
                   <Text style={styles.status}>{statusLabel(booking.status)}</Text>
                   <Text style={styles.total}>{money(booking.pricing?.total ?? 0)}</Text>
                 </View>
+                <Text style={styles.listingTitle}>
+                  {booking.listing?.title || `Listing ${booking.listingId}`}
+                </Text>
                 <Text style={styles.dates}>
                   {booking.startDate} → {booking.endDate}
                 </Text>
-                <Text style={styles.meta}>Listing {booking.listingId}</Text>
+                <Text style={styles.meta}>
+                  {booking.listing?.mode === 'buy' ? 'Purchase' : 'Rental'} · {booking.renterName}
+                </Text>
                 {booking.message ? <Text style={styles.message}>{booking.message}</Text> : null}
                 {booking.payment ? (
                   <Text style={styles.paid}>Paid · {booking.payment.transactionId}</Text>
                 ) : null}
                 {renderActions(booking)}
-              </View>
+              </Pressable>
             ))
           )}
         </ScrollView>
@@ -341,6 +376,11 @@ const styles = StyleSheet.create({
     letterSpacing: 0.6,
   },
   total: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: colors.ink,
+  },
+  listingTitle: {
     fontSize: 16,
     fontWeight: '800',
     color: colors.ink,

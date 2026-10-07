@@ -67,6 +67,16 @@ export type BookingPayment = {
   paidAt: string;
 };
 
+export type BookingListingSummary = {
+  id: string;
+  title: string;
+  mode: MarketMode;
+  category?: Exclude<GearCategory, 'all'>;
+  thumbnailTone?: 'forest' | 'brown';
+  images?: ListingImage[];
+  ownerName?: string;
+};
+
 export type Booking = {
   id: string;
   listingId: string;
@@ -81,6 +91,7 @@ export type Booking = {
   payment?: BookingPayment | null;
   createdAt?: string;
   updatedAt?: string;
+  listing?: BookingListingSummary | null;
 };
 
 export const CATEGORIES: { id: GearCategory; label: string }[] = [

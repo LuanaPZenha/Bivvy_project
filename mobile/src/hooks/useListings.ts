@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { DEFAULT_SEATTLE_ZIP } from '../data/seattleZips';
+import type { SortOption } from '../components/FilterSheet';
 import { fetchNearYou } from '../services/api';
 import {
   GearCategory,
@@ -18,6 +19,8 @@ export function useListings(
   const [mode, setMode] = useState<MarketMode>(initialMode);
   const [query, setQuery] = useState('');
   const [zipCode, setZipCode] = useState(DEFAULT_SEATTLE_ZIP);
+  const [maxDistance, setMaxDistance] = useState(25);
+  const [sortBy, setSortBy] = useState<SortOption>('distance');
   const [listings, setListings] = useState<Listing[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [usingFallback, setUsingFallback] = useState(false);
@@ -40,13 +43,34 @@ export function useListings(
           mode,
           q: query,
           zip: zipCode,
+          maxDistance,
+          sort: sortBy,
         });
         if (cancelled || requestId !== requestIdRef.current) return;
         setListings(result.listings);
         setUsingFallback(false);
       } catch {
         if (cancelled || requestId !== requestIdRef.current) return;
-        setListings(filterMockListings({ category, mode, query }));
+        let fallback = filterMockListings({ category, mode, query });
+        fallback = fallback.filter((item) => item.distanceMiles <= maxDistance);
+        if (sortBy === 'price_asc') {
+          fallback = [...fallback].sort(
+            (a, b) =>
+              (a.mode === 'buy' ? a.buyPrice || 0 : a.pricePerDay || 0) -
+              (b.mode === 'buy' ? b.buyPrice || 0 : b.pricePerDay || 0),
+          );
+        } else if (sortBy === 'price_desc') {
+          fallback = [...fallback].sort(
+            (a, b) =>
+              (b.mode === 'buy' ? b.buyPrice || 0 : b.pricePerDay || 0) -
+              (a.mode === 'buy' ? a.buyPrice || 0 : a.pricePerDay || 0),
+          );
+        } else if (sortBy === 'rating') {
+          fallback = [...fallback].sort((a, b) => b.rating - a.rating);
+        } else {
+          fallback = [...fallback].sort((a, b) => a.distanceMiles - b.distanceMiles);
+        }
+        setListings(fallback);
         setUsingFallback(true);
       } finally {
         if (!cancelled && requestId === requestIdRef.current) {
@@ -59,7 +83,7 @@ export function useListings(
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [category, mode, query, zipCode, reloadToken]);
+  }, [category, mode, query, zipCode, maxDistance, sortBy, reloadToken]);
 
   return {
     category,
@@ -70,6 +94,10 @@ export function useListings(
     setQuery,
     zipCode,
     setZipCode,
+    maxDistance,
+    setMaxDistance,
+    sortBy,
+    setSortBy,
     listings,
     count: listings.length,
     isLoading,

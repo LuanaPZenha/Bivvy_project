@@ -125,11 +125,13 @@ export type NearYouParams = {
   q?: string;
   zip?: string;
   maxDistance?: number;
+  sort?: 'distance' | 'price_asc' | 'price_desc' | 'rating';
 };
 
 export type NearYouResponse = {
   count: number;
   zipCode?: string | null;
+  sortBy?: string;
   listings: Listing[];
 };
 
@@ -141,13 +143,17 @@ export async function fetchNearYou(params: NearYouParams = {}): Promise<NearYouR
   if (params.q?.trim()) search.set('q', params.q.trim());
   if (params.zip) search.set('zip', params.zip);
   if (params.maxDistance != null) search.set('maxDistance', String(params.maxDistance));
+  if (params.sort) search.set('sort', params.sort);
 
   const qs = search.toString();
-  const raw = await apiRequest<{ count: number; zipCode?: string | null; listings: unknown[] }>(
-    `/api/gear/near${qs ? `?${qs}` : ''}`,
-  );
+  const raw = await apiRequest<{
+    count: number;
+    zipCode?: string | null;
+    sortBy?: string;
+    listings: unknown[];
+  }>(`/api/gear/near${qs ? `?${qs}` : ''}`);
   const listings = (raw.listings || []).map(normalizeListing);
-  return { count: listings.length, zipCode: raw.zipCode, listings };
+  return { count: listings.length, zipCode: raw.zipCode, sortBy: raw.sortBy, listings };
 }
 
 export async function fetchListingById(id: string): Promise<Listing> {
@@ -201,7 +207,27 @@ export type MyBookingsResponse = {
 };
 
 export async function fetchMyBookings(): Promise<MyBookingsResponse> {
-  return apiRequest<MyBookingsResponse>('/api/bookings', { auth: true });
+  const raw = await apiRequest<{ count: number; bookings: Booking[] }>('/api/bookings', {
+    auth: true,
+  });
+  return {
+    count: raw.count,
+    bookings: (raw.bookings || []).map((booking) => {
+      if (!booking.listing) return booking;
+      return {
+        ...booking,
+        listing: {
+          id: String(booking.listing.id || booking.listingId),
+          title: String(booking.listing.title || 'Listing'),
+          mode: booking.listing.mode === 'buy' ? 'buy' : 'rent',
+          category: booking.listing.category,
+          thumbnailTone: booking.listing.thumbnailTone,
+          images: booking.listing.images,
+          ownerName: booking.listing.ownerName,
+        },
+      };
+    }),
+  };
 }
 
 export async function updateBookingStatusRequest(
@@ -265,6 +291,38 @@ export async function createListingRequest(payload: CreateListingPayload): Promi
     body: payload,
   });
   return normalizeListing(raw);
+}
+
+export async function updateListingRequest(
+  listingId: string,
+  payload: Partial<CreateListingPayload>,
+): Promise<Listing> {
+  const raw = await apiRequest<unknown>(`/api/listings/${encodeURIComponent(listingId)}`, {
+    method: 'PATCH',
+    auth: true,
+    body: payload,
+  });
+  return normalizeListing(raw);
+}
+
+export async function deleteListingRequest(listingId: string): Promise<{ deleted: boolean; id: string }> {
+  return apiRequest<{ deleted: boolean; id: string }>(
+    `/api/listings/${encodeURIComponent(listingId)}`,
+    {
+      method: 'DELETE',
+      auth: true,
+    },
+  );
+}
+
+export async function deleteListingImageRequest(
+  listingId: string,
+  imageId: string,
+): Promise<{ listingId: string; removedImageId: string; images: unknown[] }> {
+  return apiRequest(`/api/listings/${encodeURIComponent(listingId)}/images/${encodeURIComponent(imageId)}`, {
+    method: 'DELETE',
+    auth: true,
+  });
 }
 
 export type UploadListingImageResponse = {

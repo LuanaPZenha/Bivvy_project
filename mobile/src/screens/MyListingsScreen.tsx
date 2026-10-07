@@ -17,7 +17,13 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
 import { useAuth } from '../auth/AuthContext';
 import { FormField } from '../components/FormField';
-import { createListingRequest, fetchMyListings, uploadListingImage } from '../services/api';
+import {
+  createListingRequest,
+  deleteListingRequest,
+  fetchMyListings,
+  updateListingRequest,
+  uploadListingImage,
+} from '../services/api';
 import { CATEGORIES, Listing, MarketMode, listingPriceLabel } from '../types/listing';
 import { primaryListingImageUrl } from '../utils/listingImages';
 import { DEFAULT_SEATTLE_ZIP, SEATTLE_ZIPS } from '../data/seattleZips';
@@ -42,6 +48,17 @@ const EMPTY_FORM: CreateForm = {
   zipCode: DEFAULT_SEATTLE_ZIP,
 };
 
+function formFromListing(listing: Listing): CreateForm {
+  return {
+    title: listing.title,
+    category: listing.category,
+    mode: listing.mode,
+    price: String(listing.mode === 'buy' ? listing.buyPrice ?? '' : listing.pricePerDay ?? ''),
+    description: listing.description || '',
+    zipCode: listing.zipCode || DEFAULT_SEATTLE_ZIP,
+  };
+}
+
 export function MyListingsScreen({ navigation }: MyListingsScreenProps) {
   const insets = useSafeAreaInsets();
   const { isAuthenticated, isLoading: authLoading } = useAuth();
@@ -49,11 +66,13 @@ export function MyListingsScreen({ navigation }: MyListingsScreenProps) {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<CreateForm>(EMPTY_FORM);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
   const [uploadingId, setUploadingId] = useState<string | null>(null);
+  const [busyId, setBusyId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     if (!isAuthenticated) {
@@ -85,7 +104,21 @@ export function MyListingsScreen({ navigation }: MyListingsScreenProps) {
     void load();
   };
 
-  const onCreate = async () => {
+  const openCreate = () => {
+    setEditingId(null);
+    setForm(EMPTY_FORM);
+    setFormError(null);
+    setShowForm(true);
+  };
+
+  const openEdit = (listing: Listing) => {
+    setEditingId(listing.id);
+    setForm(formFromListing(listing));
+    setFormError(null);
+    setShowForm(true);
+  };
+
+  const onSave = async () => {
     const title = form.title.trim();
     const priceNum = Number(form.price);
     if (!title) {
@@ -97,26 +130,64 @@ export function MyListingsScreen({ navigation }: MyListingsScreenProps) {
       return;
     }
 
+    const payload = {
+      title,
+      category: form.category,
+      mode: form.mode,
+      description: form.description.trim(),
+      zipCode: form.zipCode,
+      ...(form.mode === 'rent' ? { pricePerDay: priceNum } : { buyPrice: priceNum }),
+    };
+
     setSubmitting(true);
     setFormError(null);
     try {
-      await createListingRequest({
-        title,
-        category: form.category,
-        mode: form.mode,
-        description: form.description.trim(),
-        zipCode: form.zipCode,
-        ...(form.mode === 'rent' ? { pricePerDay: priceNum } : { buyPrice: priceNum }),
-      });
+      if (editingId) {
+        await updateListingRequest(editingId, payload);
+        Alert.alert('Listing updated', 'Your changes are live.');
+      } else {
+        await createListingRequest(payload);
+        Alert.alert('Listing created', 'Your gear is now available near you.');
+      }
       setForm(EMPTY_FORM);
+      setEditingId(null);
       setShowForm(false);
-      Alert.alert('Listing created', 'Your gear is now available near you.');
       await load();
     } catch (err) {
-      setFormError(err instanceof Error ? err.message : 'Unable to create listing');
+      setFormError(err instanceof Error ? err.message : 'Unable to save listing');
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const onDelete = (listing: Listing) => {
+    const run = async () => {
+      setBusyId(listing.id);
+      try {
+        await deleteListingRequest(listing.id);
+        if (editingId === listing.id) {
+          setShowForm(false);
+          setEditingId(null);
+        }
+        await load();
+      } catch (err) {
+        Alert.alert('Delete failed', err instanceof Error ? err.message : 'Unable to delete');
+      } finally {
+        setBusyId(null);
+      }
+    };
+
+    if (Platform.OS === 'web') {
+      // window.confirm is more reliable than Alert on web
+      if (typeof window !== 'undefined' && window.confirm(`Delete “${listing.title}”?`)) {
+        void run();
+      }
+      return;
+    }
+    Alert.alert('Delete listing', `Remove “${listing.title}”?`, [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Delete', style: 'destructive', onPress: () => void run() },
+    ]);
   };
 
   const onAddPhoto = async (listing: Listing) => {
@@ -164,9 +235,17 @@ export function MyListingsScreen({ navigation }: MyListingsScreenProps) {
         </Pressable>
         <Text style={styles.topTitle}>My listings</Text>
         <Pressable
-          onPress={() => setShowForm((v) => !v)}
+          onPress={() => {
+            if (showForm) {
+              setShowForm(false);
+              setEditingId(null);
+              setForm(EMPTY_FORM);
+            } else {
+              openCreate();
+            }
+          }}
           accessibilityRole="button"
-          accessibilityLabel={showForm ? 'Hide create form' : 'Create listing'}
+          accessibilityLabel={showForm ? 'Hide form' : 'Create listing'}
           hitSlop={12}
           disabled={!isAuthenticated}
         >
@@ -203,7 +282,7 @@ export function MyListingsScreen({ navigation }: MyListingsScreenProps) {
         >
           {showForm ? (
             <View style={styles.formCard}>
-              <Text style={styles.formHeading}>New listing</Text>
+              <Text style={styles.formHeading}>{editingId ? 'Edit listing' : 'New listing'}</Text>
               <FormField
                 label="Title"
                 value={form.title}
@@ -285,15 +364,17 @@ export function MyListingsScreen({ navigation }: MyListingsScreenProps) {
 
               <Pressable
                 style={[styles.primaryBtn, submitting && { opacity: 0.7 }]}
-                onPress={onCreate}
+                onPress={onSave}
                 disabled={submitting}
                 accessibilityRole="button"
-                accessibilityLabel="Publish listing"
+                accessibilityLabel={editingId ? 'Save listing' : 'Publish listing'}
               >
                 {submitting ? (
                   <ActivityIndicator color={colors.cream} />
                 ) : (
-                  <Text style={styles.primaryText}>Publish listing</Text>
+                  <Text style={styles.primaryText}>
+                    {editingId ? 'Save changes' : 'Publish listing'}
+                  </Text>
                 )}
               </Pressable>
             </View>
@@ -335,24 +416,51 @@ export function MyListingsScreen({ navigation }: MyListingsScreenProps) {
                       {listing.description}
                     </Text>
                   ) : null}
-                  <Pressable
-                    style={styles.photoBtn}
-                    onPress={() => onAddPhoto(listing)}
-                    disabled={uploadingId === listing.id}
-                    accessibilityRole="button"
-                    accessibilityLabel={`Add photo to ${listing.title}`}
-                  >
-                    {uploadingId === listing.id ? (
-                      <ActivityIndicator color={colors.forest} />
-                    ) : (
-                      <>
-                        <Ionicons name="camera-outline" size={18} color={colors.forest} />
-                        <Text style={styles.photoBtnText}>
-                          {(listing.images?.length || 0) > 0 ? 'Add another photo' : 'Add photo'}
-                        </Text>
-                      </>
-                    )}
-                  </Pressable>
+                  <View style={styles.cardActions}>
+                    <Pressable
+                      style={styles.photoBtn}
+                      onPress={() => onAddPhoto(listing)}
+                      disabled={uploadingId === listing.id}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Add photo to ${listing.title}`}
+                    >
+                      {uploadingId === listing.id ? (
+                        <ActivityIndicator color={colors.forest} />
+                      ) : (
+                        <>
+                          <Ionicons name="camera-outline" size={18} color={colors.forest} />
+                          <Text style={styles.photoBtnText}>
+                            {(listing.images?.length || 0) > 0 ? 'Add photo' : 'Add photo'}
+                          </Text>
+                        </>
+                      )}
+                    </Pressable>
+                    <Pressable
+                      style={styles.photoBtn}
+                      onPress={() => openEdit(listing)}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Edit ${listing.title}`}
+                    >
+                      <Ionicons name="create-outline" size={18} color={colors.forest} />
+                      <Text style={styles.photoBtnText}>Edit</Text>
+                    </Pressable>
+                    <Pressable
+                      style={[styles.photoBtn, styles.deleteBtn]}
+                      onPress={() => onDelete(listing)}
+                      disabled={busyId === listing.id}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Delete ${listing.title}`}
+                    >
+                      {busyId === listing.id ? (
+                        <ActivityIndicator color={colors.danger} />
+                      ) : (
+                        <>
+                          <Ionicons name="trash-outline" size={18} color={colors.danger} />
+                          <Text style={[styles.photoBtnText, { color: colors.danger }]}>Delete</Text>
+                        </>
+                      )}
+                    </Pressable>
+                  </View>
                 </View>
               );
             })
@@ -494,8 +602,13 @@ const styles = StyleSheet.create({
     color: colors.muted,
     lineHeight: 20,
   },
-  photoBtn: {
+  cardActions: {
     marginTop: 4,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  photoBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
@@ -506,6 +619,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     backgroundColor: colors.cream,
+  },
+  deleteBtn: {
+    borderColor: '#E8C4C4',
   },
   photoBtnText: {
     color: colors.forest,

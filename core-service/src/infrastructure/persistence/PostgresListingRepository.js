@@ -124,6 +124,11 @@ class PostgresListingRepository {
     );
     return entity;
   }
+
+  async deleteById(id) {
+    const result = await this.pool.query('DELETE FROM listings WHERE id = $1', [id]);
+    return result.rowCount > 0;
+  }
 }
 
 function mapListing(row) {

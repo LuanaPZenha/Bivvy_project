@@ -67,6 +67,53 @@ describe('Core gear routes integration', () => {
     expect(res.body.ownerId).toBe('user_sam');
   });
 
+  it('PATCH /listings/:id updates an owned listing and DELETE removes it', async () => {
+    const created = await request(app)
+      .post('/listings')
+      .set('x-user-id', 'user_edit')
+      .send({
+        title: 'Editable Pack',
+        category: 'hiking',
+        mode: 'rent',
+        pricePerDay: 20,
+        description: 'Before edit',
+      });
+    expect(created.status).toBe(201);
+    const id = created.body.id;
+
+    const updated = await request(app)
+      .patch(`/listings/${id}`)
+      .set('x-user-id', 'user_edit')
+      .send({ title: 'Edited Pack', pricePerDay: 22, description: 'After edit' });
+    expect(updated.status).toBe(200);
+    expect(updated.body.title).toBe('Edited Pack');
+    expect(updated.body.pricePerDay).toBe(22);
+
+    const forbidden = await request(app)
+      .patch(`/listings/${id}`)
+      .set('x-user-id', 'other_user')
+      .send({ title: 'Nope' });
+    expect(forbidden.status).toBe(403);
+
+    const deleted = await request(app)
+      .delete(`/listings/${id}`)
+      .set('x-user-id', 'user_edit');
+    expect(deleted.status).toBe(200);
+    expect(deleted.body.deleted).toBe(true);
+
+    const missing = await request(app).get(`/gear/${id}`);
+    expect(missing.status).toBe(404);
+  });
+
+  it('GET /gear/near supports sort=price_asc', async () => {
+    const res = await request(app).get('/gear/near').query({ mode: 'rent', sort: 'price_asc' });
+    expect(res.status).toBe(200);
+    expect(res.body.sortBy).toBe('price_asc');
+    const prices = res.body.listings.map((l) => l.pricePerDay);
+    const sorted = [...prices].sort((a, b) => a - b);
+    expect(prices).toEqual(sorted);
+  });
+
   it('quotes and creates bookings for authenticated renters', async () => {
     const start = futureDate(3);
     const end = futureDate(6);

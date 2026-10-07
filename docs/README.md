@@ -1,7 +1,7 @@
 # Bivvy Documentation
 
 > Product language: **English** (US market).  
-> Last reviewed: **2026-09-09**
+> Last reviewed: **2026-10-07**
 
 Bivvy is an outdoor adventure gear rental and resale marketplace. This folder is the **source of truth** for how the system is designed, built, secured, and operated.
 
@@ -52,11 +52,11 @@ Bivvy is an outdoor adventure gear rental and resale marketplace. This folder is
 |------|--------|
 | API Gateway (proxy + edge security) | Current (bookings proxy + identity headers) |
 | Auth (register / login / Google / refresh / me + roles) | Current (Postgres users; refresh tokens in memory) |
-| Core listings (near you / detail / create / mine / images) | Current (local upload store; Postgres adapter when `DATABASE_URL` reachable) |
-| Bookings (quote / request / list / status / checkout sim) | Current |
+| Core listings (near you / detail / create / update / delete / mine / images) | Current (local upload store; Postgres adapter when `DATABASE_URL` reachable) |
+| Bookings (quote / request / list + listing summary / status / checkout sim) | Current |
 | Cart checkout (multi buy requests) | Current |
-| Mobile explore + detail + booking + cart + photos | Current (live API with offline catalog fallback) |
-| Owner / renter profile slices | Current (My listings + photo upload + My rentals) |
+| Mobile explore + filters + favorites + notifications + booking + cart + photos | Current (live API with offline catalog fallback) |
+| Owner / renter profile slices | Current (My listings CRUD + photo upload + My rentals) |
 | Redis refresh store | Planned |
 | Message broker | Planned (not implemented) |
 | Real payment processor | Planned (checkout uses `bivvy_sim`) |

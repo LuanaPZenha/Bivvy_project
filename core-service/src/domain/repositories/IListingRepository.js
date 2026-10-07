@@ -16,6 +16,10 @@ class IListingRepository {
   async save(_listing) {
     throw new Error('Not implemented');
   }
+
+  async deleteById(_id) {
+    throw new Error('Not implemented');
+  }
 }
 
 module.exports = { IListingRepository };

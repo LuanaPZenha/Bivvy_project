@@ -25,6 +25,8 @@ export type RootStackParamList = {
   MyRentals: undefined;
   MyListings: undefined;
   Cart: undefined;
+  Favorites: undefined;
+  Notifications: undefined;
 };
 
 export type HomeScreenProps = CompositeScreenProps<
@@ -42,6 +44,8 @@ export type BookingRequestScreenProps = NativeStackScreenProps<
 export type MyRentalsScreenProps = NativeStackScreenProps<RootStackParamList, 'MyRentals'>;
 export type MyListingsScreenProps = NativeStackScreenProps<RootStackParamList, 'MyListings'>;
 export type CartScreenProps = NativeStackScreenProps<RootStackParamList, 'Cart'>;
+export type FavoritesScreenProps = NativeStackScreenProps<RootStackParamList, 'Favorites'>;
+export type NotificationsScreenProps = NativeStackScreenProps<RootStackParamList, 'Notifications'>;
 
 export type LoginScreenProps = NativeStackScreenProps<AuthStackParamList, 'Login'>;
 export type RegisterScreenProps = NativeStackScreenProps<AuthStackParamList, 'Register'>;

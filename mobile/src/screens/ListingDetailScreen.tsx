@@ -16,6 +16,7 @@ import { fetchListingById } from '../services/api';
 import { Listing, MOCK_LISTINGS, listingPriceLabel } from '../types/listing';
 import { primaryListingImageUrl } from '../utils/listingImages';
 import { useCart } from '../cart/CartContext';
+import { useFavorites } from '../favorites/FavoritesContext';
 import { useRootNavigation } from '../navigation/useRootNavigation';
 import { colors, radii, spacing } from '../theme/tokens';
 import type { ListingDetailScreenProps } from '../navigation/types';
@@ -26,6 +27,7 @@ export function ListingDetailScreen({ navigation, route }: ListingDetailScreenPr
   const [listing, setListing] = useState<Listing | null>(null);
   const [loading, setLoading] = useState(true);
   const { addItem, hasItem } = useCart();
+  const { isFavorite, toggleFavorite } = useFavorites();
   const rootNav = useRootNavigation();
 
   useEffect(() => {
@@ -132,6 +134,20 @@ export function ListingDetailScreen({ navigation, route }: ListingDetailScreenPr
               <Text style={styles.proText}>PRO</Text>
             </View>
           ) : null}
+          <Pressable
+            style={styles.favBtn}
+            onPress={() => toggleFavorite(listing)}
+            accessibilityRole="button"
+            accessibilityLabel={
+              isFavorite(listing.id) ? 'Remove from saved' : 'Save listing'
+            }
+          >
+            <Ionicons
+              name={isFavorite(listing.id) ? 'heart' : 'heart-outline'}
+              size={22}
+              color={isFavorite(listing.id) ? colors.danger : colors.cream}
+            />
+          </Pressable>
         </View>
 
         <View style={styles.content}>
@@ -237,12 +253,24 @@ const styles = StyleSheet.create({
   proBadge: {
     position: 'absolute',
     top: 56,
-    right: spacing.md,
+    right: spacing.md + 48,
     zIndex: 2,
     backgroundColor: colors.gold,
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 4,
+  },
+  favBtn: {
+    position: 'absolute',
+    top: 52,
+    right: spacing.md,
+    zIndex: 2,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(0,0,0,0.25)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   proText: {
     fontSize: 11,

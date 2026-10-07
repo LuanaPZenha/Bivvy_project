@@ -257,6 +257,12 @@ class InMemoryListingRepository {
     else this.items.push(listing);
     return listing;
   }
+
+  async deleteById(id) {
+    const before = this.items.length;
+    this.items = this.items.filter((l) => l.id !== id);
+    return before !== this.items.length;
+  }
 }
 
 module.exports = { InMemoryListingRepository, SEED };

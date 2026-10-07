@@ -13,6 +13,7 @@ class GearController {
         query: req.query.q || req.query.query || '',
         maxDistanceMiles: Number(req.query.maxDistance) || 25,
         zipCode: req.query.zip || req.query.zipCode || null,
+        sortBy: req.query.sort || req.query.sortBy || 'distance',
       });
       res.json(result);
     } catch (err) {
@@ -41,6 +42,36 @@ class GearController {
     try {
       res.json(
         await this.listOwnerListings.execute({ ownerId: req.actor && req.actor.userId }),
+      );
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  update = async (req, res, next) => {
+    try {
+      const listing = await this.updateListing.execute(req.params.id, req.body, req.actor || {});
+      res.json(listing);
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  remove = async (req, res, next) => {
+    try {
+      res.json(await this.deleteListing.execute(req.params.id, req.actor || {}));
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  removeImage = async (req, res, next) => {
+    try {
+      res.json(
+        await this.removeListingImage.execute(
+          { listingId: req.params.id, imageId: req.params.imageId },
+          req.actor || {},
+        ),
       );
     } catch (err) {
       next(err);
