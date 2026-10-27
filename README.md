@@ -1,51 +1,53 @@
 # Bivvy
 
-Outdoor adventure gear rental marketplace for the **US** (English UI).
+Outdoor adventure gear rental & resale marketplace (**English UI**, US market).
 
-Independently deployable services — **not** an npm monorepo.
+**v2 — pure JavaScript.** One Node.js API + one vanilla JS web app. No Expo / React Native mobile app.
 
 ## Documentation
 
 **Start here → [docs/README.md](./docs/README.md)**
 
-| Topic | Link |
-|-------|------|
-| Getting started | [docs/getting-started.md](./docs/getting-started.md) |
-| Architecture | [docs/architecture.md](./docs/architecture.md) |
-| API | [docs/api/overview.md](./docs/api/overview.md) |
-| Security | [docs/security.md](./docs/security.md) |
-| Testing | [docs/testing.md](./docs/testing.md) |
-| Keeping docs updated | [docs/DOCUMENTATION.md](./docs/DOCUMENTATION.md) |
-
 ## Layout
 
 ```
-mobile/          Expo app
-api-gateway/     Public HTTP edge
-auth-service/    Auth (DDD)
-core-service/    Listings (DDD)
-infra/           Postgres init SQL
-docs/            Full documentation (English)
+server/     Express API (JavaScript)
+web/        Vite SPA (vanilla JavaScript)
+docs/       Product & API docs (English)
+Dockerfile  Production image (API + built web)
 docker-compose.yml
 ```
 
 ## Quick start
 
 ```bash
-cp .env.example .env   # never commit .env
+cp .env.example .env
 
-cd api-gateway && npm install && npm test && cd ..
-cd auth-service && npm install && npm test && cd ..
-cd core-service && npm install && npm test && cd ..
-cd mobile && npm install && npm test && cd ..
+# API
+cd server && npm install && npm test && npm run dev
 
+# Web (another terminal)
+cd web && npm install && npm run dev
+```
+
+- Web (Vite): http://localhost:5173  
+- API: http://localhost:3000  
+- Demo login: `demo@bivvy.test` / `BivvyDemo123`
+
+### Single production process
+
+```bash
+cd web && npm install && npm run build && cd ..
+cd server && npm install && npm start
+# serves API + web/dist on :3000
+```
+
+Or:
+
+```bash
 docker compose up --build
 ```
 
-- Gateway: `http://localhost:3000`
-- Mobile: `cd mobile && npx expo start`
+## What shipped
 
-## Service communication
-
-**Current:** synchronous HTTP through the API Gateway.  
-**Planned:** message broker for async domain events (see architecture docs).
+Explore (rent/buy, search, filters), listing detail, booking + simulated pay, cart, favorites, owner listings (create/edit/delete + blocked dates), booking chat, reviews.
