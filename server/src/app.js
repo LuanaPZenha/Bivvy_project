@@ -26,7 +26,7 @@ function createApp(overrides = {}) {
     }),
   );
   app.use(express.json({ limit: '100kb' }));
-  if (config.nodeEnv !== 'test') {
+  if (process.env.NODE_ENV !== 'test') {
     app.use(morgan(config.nodeEnv === 'production' ? 'combined' : 'dev'));
   }
 
