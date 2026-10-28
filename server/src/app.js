@@ -37,9 +37,11 @@ function createApp(overrides = {}) {
     app.use(morgan(config.nodeEnv === 'production' ? 'combined' : 'dev'));
   }
 
-  app.get('/health', (_req, res) => {
+  const health = (_req, res) => {
     res.json({ status: 'ok', service: 'bivvy-server', version: '2.0.0' });
-  });
+  };
+  app.get('/health', health);
+  app.get('/api/health', health);
 
   app.get('/api/meta', (_req, res) => {
     res.json({

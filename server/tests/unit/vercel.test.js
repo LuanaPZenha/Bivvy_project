@@ -27,6 +27,22 @@ describe('Vercel hosting', () => {
     }
   });
 
+  it('serves health on the API path used by the Vercel rewrite', async () => {
+    const app = createApp();
+    const server = await new Promise((resolve) => {
+      const httpServer = app.listen(0, '127.0.0.1', () => resolve(httpServer));
+    });
+    try {
+      const { port } = server.address();
+      const res = await fetch(`http://127.0.0.1:${port}/api/health`);
+      const json = await res.json();
+      assert.equal(res.status, 200);
+      assert.equal(json.status, 'ok');
+    } finally {
+      await new Promise((resolve) => server.close(resolve));
+    }
+  });
+
   it('seeds the demo account on the first request', async () => {
     const app = createApp({ seedOnRequest: true });
     const server = await new Promise((resolve) => {

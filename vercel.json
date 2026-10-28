@@ -2,14 +2,12 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "buildCommand": "node scripts/copy-web-public.js",
   "rewrites": [
-    {
-      "source": "/((?!api/|src/|health$).*)",
-      "destination": "/index.html"
-    }
+    { "source": "/health", "destination": "/api/health" },
+    { "source": "/:path((?!api/|src/).*)", "destination": "/index.html" }
   ],
   "headers": [
     {
-      "source": "/((?!api/).*)",
+      "source": "/:path((?!api/).*)",
       "headers": [
         {
           "key": "Content-Security-Policy",
