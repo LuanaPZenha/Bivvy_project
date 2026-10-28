@@ -1,7 +1,7 @@
 # Bivvy Documentation
 
 > Product language: **English** (US market).  
-> Last reviewed: **2026-10-27**
+> Last reviewed: **2026-10-28**
 
 Bivvy is an outdoor adventure gear rental and resale **web marketplace** in **JavaScript** (Node API + browser pages).
 

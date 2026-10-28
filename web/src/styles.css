@@ -98,14 +98,11 @@ button {
 }
 
 .brand-mark {
-  width: 34px;
-  height: 34px;
-  border-radius: 10px;
-  background: linear-gradient(145deg, var(--gold), #b8892f);
-  display: grid;
-  place-items: center;
-  color: var(--forest);
-  font-size: 1.1rem;
+  width: 36px;
+  height: 36px;
+  display: block;
+  flex: none;
+  border-radius: 11px;
 }
 
 .nav-actions {

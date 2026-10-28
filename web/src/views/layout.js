@@ -48,7 +48,7 @@ export function renderShell(contentHtml) {
     <div class="shell">
       <header class="topnav">
         <a class="brand" href="#/" data-link="/">
-          <span class="brand-mark" aria-hidden="true">🌲</span>
+          <img class="brand-mark" src="/favicon.svg" alt="" width="36" height="36" />
           <span>BIVVY</span>
         </a>
         <nav class="nav-actions desktop-nav" aria-label="Account">

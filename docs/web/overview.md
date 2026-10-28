@@ -20,4 +20,4 @@ The same site is laid out for a phone browser (no install, no native app):
 
 The site is static files. `web/package.json` only sets `"type": "module"` so Node can import those files in tests. There is no bundler and no runtime dependency. `server` serves the files on port 3000 with the API. On Vercel, the build copies them to `public/` and the CDN serves them. On a phone on the same network, open `http://<this-machine>:3000`.
 
-Brand tokens live in `web/src/styles.css` (forest / cream / gold). Product UI strings are English (US).
+Brand tokens live in `web/src/styles.css` (forest / cream / gold). The header mark is `web/favicon.svg`: a cream fir and gold trunk on a forest tile. Product UI strings are English (US).
