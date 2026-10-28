@@ -2,7 +2,7 @@
 
 ## Current
 
-GitHub Actions workflow `.github/workflows/ci.yml` installs and tests `server/`. The browser files in `web/` have no build step.
+GitHub Actions workflow `.github/workflows/ci.yml` installs `server/`, runs the full Node test suite (API, security, domain, and browser helpers), then `npm audit --omit=dev --audit-level=high`. The browser files in `web/` have no build step.
 
 ## Planned
 

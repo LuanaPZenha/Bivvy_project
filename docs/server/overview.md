@@ -19,6 +19,8 @@ npm run dev
 ## Modules
 
 - `src/routes/` — auth, listings, bookings, cart
-- `src/store/memoryStore.js` — process memory
+- `src/security/` — headers, rate limit, passwords, text limits
+- `src/domain/` — booking transitions and listing validation
 - `src/services/pricing.js` / `geo.js`
-- `src/middleware/auth.js` — JWT
+- `src/store/memoryStore.js` — process memory
+- `src/middleware/auth.js` — JWT (HS256)

@@ -1,13 +1,22 @@
 'use strict';
 
+const DEV_JWT_SECRET = 'dev-only-change-me-bivvy-access';
+
+function assertProductionConfig(cfg) {
+  if (cfg.nodeEnv === 'production' && (!cfg.jwtSecret || cfg.jwtSecret === DEV_JWT_SECRET)) {
+    throw new Error('JWT_ACCESS_SECRET must be set to a unique value in production');
+  }
+}
+
 module.exports = {
   port: Number(process.env.PORT) || 3000,
   nodeEnv: process.env.NODE_ENV || 'development',
-  jwtSecret: process.env.JWT_ACCESS_SECRET || 'dev-only-change-me-bivvy-access',
+  jwtSecret: process.env.JWT_ACCESS_SECRET || DEV_JWT_SECRET,
   jwtExpiresIn: process.env.JWT_ACCESS_EXPIRES_IN || '7d',
   seedDemoUser: process.env.SEED_DEMO_USER !== 'false',
   demoEmail: process.env.DEMO_USER_EMAIL || 'demo@bivvy.test',
   demoPassword: process.env.DEMO_USER_PASSWORD || 'BivvyDemo123',
   serviceFeeRate: 0.1,
   taxRate: 0.0805,
+  assertProductionConfig,
 };

@@ -842,8 +842,11 @@ textarea {
   border-bottom: 1px solid var(--border);
 }
 
-.list-row:last-child {
+.list-row:last-child,
+.list-row.flat {
   border-bottom: 0;
+  padding-top: 0;
+  padding-bottom: 0;
 }
 
 .chat {

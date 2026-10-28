@@ -6,9 +6,8 @@ const { requireAuth } = require('../middleware/auth');
 const { httpError } = require('../middleware/errors');
 const { distanceFromZip, resolveZip } = require('../services/geo');
 const { calculateRentalPricing, calculateBuyPricing } = require('../services/pricing');
-
-const CATEGORIES = new Set(['camping', 'hiking', 'climbing', 'water', 'snow', 'bikes']);
-const MODES = new Set(['rent', 'buy']);
+const { readListingInput, readDiscoveryQuery } = require('../domain/listingRules');
+const { isoDate, plain } = require('../security/text');
 
 function listingPrice(listing) {
   return listing.mode === 'buy' ? Number(listing.buyPrice) || 0 : Number(listing.pricePerDay) || 0;
@@ -28,41 +27,6 @@ function sortListings(listings, sortBy) {
   }
 }
 
-function validateListingInput(body, { partial = false } = {}) {
-  const out = {};
-  if (!partial || body.title != null) {
-    out.title = String(body.title || '').trim();
-    if (!out.title) throw httpError(400, 'Listing requires a title');
-  }
-  if (!partial || body.category != null) {
-    out.category = String(body.category || 'camping').toLowerCase();
-    if (!CATEGORIES.has(out.category)) throw httpError(400, 'Invalid category');
-  }
-  if (!partial || body.mode != null) {
-    out.mode = String(body.mode || 'rent').toLowerCase();
-    if (!MODES.has(out.mode)) throw httpError(400, 'Mode must be rent or buy');
-  }
-  if (!partial || body.description != null) {
-    out.description = String(body.description || '');
-  }
-  if (!partial || body.zipCode != null) {
-    out.zipCode = String(body.zipCode || '98103');
-  }
-  if (!partial || body.blockedDates != null) {
-    out.blockedDates = Array.isArray(body.blockedDates)
-      ? body.blockedDates.map(String)
-      : [];
-  }
-  if (!partial || body.isPro != null) out.isPro = Boolean(body.isPro);
-  if (!partial || body.pricePerDay != null) {
-    out.pricePerDay = body.pricePerDay == null ? null : Number(body.pricePerDay);
-  }
-  if (!partial || body.buyPrice != null) {
-    out.buyPrice = body.buyPrice == null ? null : Number(body.buyPrice);
-  }
-  return out;
-}
-
 function createListingsRouter(store) {
   const router = Router();
 
@@ -71,15 +35,18 @@ function createListingsRouter(store) {
     res.json({ count: listings.length, listings });
   });
 
-  router.get('/near', (req, res) => {
-    const category = String(req.query.category || 'all').toLowerCase();
-    const mode = String(req.query.mode || 'all').toLowerCase();
-    const q = String(req.query.q || req.query.query || '')
-      .trim()
-      .toLowerCase();
-    const maxDistance = Number(req.query.maxDistance) || 25;
-    const zipCode = req.query.zip || req.query.zipCode || null;
-    const sortBy = String(req.query.sort || req.query.sortBy || 'distance').toLowerCase();
+  router.get('/near', (req, res, next) => {
+    let category;
+    let mode;
+    let q;
+    let maxDistance;
+    let zipCode;
+    let sortBy;
+    try {
+      ({ category, mode, q, maxDistance, zipCode, sortBy } = readDiscoveryQuery(req.query));
+    } catch (err) {
+      return next(err);
+    }
 
     let listings = [...store.listings.values()].map((listing) => {
       const distanceMiles = zipCode ? distanceFromZip(listing, zipCode) : listing.distanceMiles;
@@ -130,11 +97,13 @@ function createListingsRouter(store) {
       const listing = store.listings.get(req.params.id);
       if (!listing) throw httpError(404, 'Listing not found');
       let pricing;
+      let startDate = null;
+      let endDate = null;
       if (listing.mode === 'buy') {
         pricing = calculateBuyPricing({ buyPrice: listing.buyPrice });
       } else {
-        const { startDate, endDate } = req.body || {};
-        if (!startDate || !endDate) throw httpError(400, 'startDate and endDate are required');
+        startDate = isoDate(req.body?.startDate, 'startDate');
+        endDate = isoDate(req.body?.endDate, 'endDate');
         pricing = calculateRentalPricing({
           pricePerDay: listing.pricePerDay,
           startDate,
@@ -144,8 +113,8 @@ function createListingsRouter(store) {
       res.json({
         listingId: listing.id,
         mode: listing.mode,
-        startDate: req.body?.startDate,
-        endDate: req.body?.endDate,
+        startDate,
+        endDate,
         pricing,
       });
     } catch (err) {
@@ -155,7 +124,7 @@ function createListingsRouter(store) {
 
   router.post('/', requireAuth, (req, res, next) => {
     try {
-      const input = validateListingInput(req.body);
+      const input = readListingInput(req.body);
       if (input.mode === 'rent') {
         if (input.pricePerDay == null || Number.isNaN(input.pricePerDay) || input.pricePerDay < 0) {
           throw httpError(400, 'Rent listings require pricePerDay');
@@ -180,7 +149,7 @@ function createListingsRouter(store) {
         reviewCount: 0,
         ownerName: req.user.name || 'You',
         ownerId: req.user.id,
-        isPro: Boolean(input.isPro),
+        isPro: input.isPro === true,
         location: geo?.label || 'Seattle, WA',
         zipCode: input.zipCode,
         latitude: geo?.lat || 47.61,
@@ -202,7 +171,7 @@ function createListingsRouter(store) {
       const existing = store.listings.get(req.params.id);
       if (!existing) throw httpError(404, 'Listing not found');
       if (existing.ownerId !== req.user.id) throw httpError(403, 'Forbidden');
-      const input = validateListingInput(req.body, { partial: true });
+      const input = readListingInput(req.body, { partial: true });
       const nextListing = { ...existing, ...input };
       if (nextListing.mode === 'rent') {
         if (nextListing.pricePerDay == null) throw httpError(400, 'Rent listings require pricePerDay');
@@ -254,8 +223,8 @@ function createListingsRouter(store) {
       for (const review of store.reviews.values()) {
         if (review.bookingId === bookingId) throw httpError(409, 'Booking already reviewed');
       }
-      const rating = Number(req.body.rating);
-      if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
+      const rating = req.body.rating;
+      if (typeof rating !== 'number' || !Number.isInteger(rating) || rating < 1 || rating > 5) {
         throw httpError(400, 'Rating must be an integer from 1 to 5');
       }
       const review = {
@@ -265,7 +234,7 @@ function createListingsRouter(store) {
         reviewerId: req.user.id,
         reviewerName: req.user.name || 'Renter',
         rating,
-        comment: String(req.body.comment || '').trim().slice(0, 1000),
+        comment: plain(req.body.comment, 1000),
         createdAt: new Date().toISOString(),
       };
       store.reviews.set(review.id, review);

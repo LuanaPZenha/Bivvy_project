@@ -23,7 +23,7 @@ function requireAuth(req, res, next) {
     return res.status(401).json({ error: 'Authentication required' });
   }
   try {
-    const payload = jwt.verify(match[1], config.jwtSecret);
+    const payload = jwt.verify(match[1], config.jwtSecret, { algorithms: ['HS256'] });
     req.user = {
       id: payload.sub,
       email: payload.email,
@@ -41,7 +41,7 @@ function optionalAuth(req, _res, next) {
   const match = /^Bearer\s+(.+)$/i.exec(header);
   if (!match) return next();
   try {
-    const payload = jwt.verify(match[1], config.jwtSecret);
+    const payload = jwt.verify(match[1], config.jwtSecret, { algorithms: ['HS256'] });
     req.user = {
       id: payload.sub,
       email: payload.email,

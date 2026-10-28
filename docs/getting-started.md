@@ -35,6 +35,9 @@ docker compose up --build
 | Variable | Purpose |
 |----------|---------|
 | `PORT` | Listen port (default `3000`) |
-| `JWT_ACCESS_SECRET` | JWT signing secret |
+| `JWT_ACCESS_SECRET` | JWT signing secret. Must be unique when `NODE_ENV=production` |
+| `AUTH_RATE_LIMIT_MAX` | Login/register attempts per IP per window (default 10) |
+| `AUTH_RATE_LIMIT_WINDOW_MS` | Rate-limit window in milliseconds (default 900000) |
+| `TRUST_PROXY` | Set `true` only behind a trusted reverse proxy |
 | `SEED_DEMO_USER` | Seed demo account on boot |
 | `DEMO_USER_EMAIL` / `DEMO_USER_PASSWORD` | Demo credentials |
