@@ -1,9 +1,9 @@
 # Bivvy Documentation
 
 > Product language: **English** (US market).  
-> Last reviewed: **2026-08-10**
+> Last reviewed: **2026-10-27**
 
-Bivvy is an outdoor adventure gear rental and resale marketplace. This folder is the **source of truth** for how the system is designed, built, secured, and operated.
+Bivvy is an outdoor adventure gear rental and resale **web marketplace**, rewritten as a pure **JavaScript** stack (Node API + vanilla JS SPA).
 
 ## Read in this order
 
@@ -11,50 +11,46 @@ Bivvy is an outdoor adventure gear rental and resale marketplace. This folder is
 |---|----------|----------|
 | 1 | [Getting Started](./getting-started.md) | Anyone setting up the project |
 | 2 | [Architecture](./architecture.md) | Engineers joining the codebase |
-| 3 | [API Overview](./api/overview.md) | Mobile & backend integrators |
+| 3 | [API Overview](./api/overview.md) | Frontend & API integrators |
 | 4 | [Security](./security.md) | Everyone shipping features |
 | 5 | [Testing](./testing.md) | Contributors writing code |
 | 6 | [CI/CD](./ci-cd.md) | Anyone changing pipelines |
 | 7 | [Documentation Guide](./DOCUMENTATION.md) | Anyone changing the product |
 
-## Service & client docs
+## Component docs
 
 | Component | Doc |
 |-----------|-----|
-| API Gateway | [services/api-gateway.md](./services/api-gateway.md) |
-| Auth Service | [services/auth-service.md](./services/auth-service.md) |
-| Core Service | [services/core-service.md](./services/core-service.md) |
-| Mobile (Expo) | [mobile/overview.md](./mobile/overview.md) |
+| Server API | [server/overview.md](./server/overview.md) |
+| Web app | [web/overview.md](./web/overview.md) |
 | Auth API | [api/auth.md](./api/auth.md) |
-| Gear / Listings API | [api/gear.md](./api/gear.md) |
-| Mobile UI & brand | [mobile/ui-and-brand.md](./mobile/ui-and-brand.md) |
-| Mobile security | [mobile/security.md](./mobile/security.md) |
+| Listings & bookings API | [api/marketplace.md](./api/marketplace.md) |
 
-## Repository layout (quick map)
+## Repository layout
 
 ```
 /
-├── docs/                 ← you are here
-├── mobile/               Expo app
-├── api-gateway/          Public HTTP edge
-├── auth-service/         Authentication (DDD)
-├── core-service/         Listings & gear (DDD)
-├── infra/postgres/       DB bootstrap SQL
-├── docker-compose.yml    Local stack only
-└── .github/workflows/    Isolated CI per service
+├── docs/
+├── server/          Express API (JavaScript)
+├── web/             Vite SPA (vanilla JavaScript)
+├── Dockerfile
+└── docker-compose.yml
 ```
 
-**Important:** this is **not** an npm monorepo. There is no root `package.json` and no shared workspace package. Each service is independently installable, testable, and deployable.
+This is **not** an Expo app and **not** a multi-service mesh. One server process owns auth, listings, bookings, cart, chat, and reviews.
 
 ## Status snapshot
 
 | Area | Status |
 |------|--------|
-| API Gateway (proxy + edge security) | Bootstrap complete |
-| Auth (register / login / refresh) | Current (Postgres users; refresh tokens in memory) |
-| Core listings (near you / create) | Bootstrap (in-memory seed data) |
-| Mobile home UI (Bivvy brand) | Bootstrap (mock listings) |
-| Postgres / Redis wiring | Auth users on Postgres; Core and Redis still in memory |
-| Message broker | Planned (not implemented) |
+| Web explore / detail / auth | Current |
+| Bookings + simulated checkout (`bivvy_sim`) | Current (`requested → accepted → paid → completed`) |
+| Cart (buy requests) | Current |
+| Owner listings CRUD + blocked dates | Current |
+| Booking chat | Current |
+| Reviews after completion | Current |
+| Favorites (browser localStorage) | Current |
+| Real Stripe charges | Planned (intent shape is Stripe-ready) |
+| Postgres persistence | Planned (in-memory store today) |
 
 When you change behavior, update the matching docs in the same change. See [DOCUMENTATION.md](./DOCUMENTATION.md).

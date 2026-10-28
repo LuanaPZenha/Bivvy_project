@@ -1,169 +1,55 @@
 # Getting Started
 
-Set up Bivvy locally for development. Each service is independent — install and run them on their own, or use Docker Compose for the full stack.
+## Requirements
 
-## Prerequisites
+- Node.js 20+
+- npm
 
-| Tool | Version |
-|------|---------|
-| Node.js | ≥ 20 |
-| npm | ≥ 10 (comes with Node) |
-| Docker Desktop | Recent stable (for Compose) |
-| Git | Any recent version |
-| Expo Go / emulator | Optional, for mobile |
-
-## 1. Clone and configure secrets
+## Setup
 
 ```bash
-git clone https://github.com/LuanaPZenha/Bivvy_project.git
-cd Bivvy_project
-
 cp .env.example .env
+cd server && npm install
+cd ../web && npm install
 ```
 
-Edit `.env` and replace placeholder secrets. **Never commit `.env`.**
-
-| Variable | Purpose |
-|----------|---------|
-| `POSTGRES_USER` / `POSTGRES_PASSWORD` | Postgres credentials |
-| `AUTH_DATABASE_URL` | Auth service DB URL |
-| `CORE_DATABASE_URL` | Core service DB URL |
-| `REDIS_URL` | Refresh-token store (Compose) |
-| `JWT_ACCESS_SECRET` | Access token signing secret |
-| `JWT_REFRESH_SECRET` | Refresh token HMAC secret |
-| `CORS_ORIGIN` | Allowed browser/mobile origin(s), comma-separated |
-| `EXPO_PUBLIC_API_URL` | Mobile public API base (gateway only) |
-| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Google Web OAuth client (auth-service) |
-| `EXPO_PUBLIC_GOOGLE_CLIENT_ID` | Same Web client ID for Expo (public) |
-| `EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID` | Android OAuth client (required for Google sign-in on Android) |
-| `EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID` | iOS OAuth client (required for Google sign-in on iOS) |
-
-Generate strong JWT secrets, for example:
+## Run locally (two terminals)
 
 ```bash
-openssl rand -base64 64
+# Terminal 1 — API
+cd server && npm run dev
+
+# Terminal 2 — Web
+cd web && npm run dev
 ```
 
-### Google Sign-In credentials
+Open http://localhost:5173 (Vite proxies `/api` to `:3000`).
 
-After downloading `client_secret_*.json` from Google Cloud, load it into `.env`:
+On a phone, use the same Wi-Fi and open the Network URL Vite prints (`npm run dev` binds the LAN). The layout is built for the phone browser: bottom tabs, filter sheet, and a fixed booking bar.
 
-```powershell
-powershell -File scripts/load-google-credentials.ps1
-# or
-powershell -File scripts/load-google-credentials.ps1 -JsonPath "C:\Users\you\Downloads\client_secret_....json"
-```
+Demo account (seeded): `demo@bivvy.test` / `BivvyDemo123`
 
-Add your Google account under **OAuth → Target audience → Test users**. Restart `docker compose` / auth-service after updating `.env`.
-
-The Web client alone only covers Expo web. Google sign-in **on a device** also needs a native OAuth client:
-
-| Platform | Client type | Package / Bundle ID |
-|----------|-------------|---------------------|
-| Android in Expo Go | Android | `host.exp.exponent` (plus the Expo Go signing SHA-1) |
-| Android standalone build | Android | `com.bivvy.app` (plus your build's SHA-1) |
-| iOS | iOS | `com.bivvy.app` |
-
-Copy each generated client ID into `EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID` / `EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID`. Until then, the Google button reports that the platform client is missing and email sign-up still works.
-
-### Demo login (development)
-
-The auth service seeds a demo account outside production so you can sign in immediately:
-
-| Email | Password |
-|-------|----------|
-| `demo@bivvy.test` | `BivvyDemo123` |
-
-Disable it with `SEED_DEMO_USER=false`. See [Auth Service](./services/auth-service.md).
-
-## 2. Install each project independently
-
-There is **no** root `npm install`.
+## Production-style (API serves built web)
 
 ```bash
-cd api-gateway && npm install && cd ..
-cd auth-service && npm install && cd ..
-cd core-service && npm install && cd ..
-cd mobile && npm install && cd ..
+cd web && npm run build
+cd ../server && npm start
 ```
 
-## 3. Run tests (recommended before coding)
+Open http://localhost:3000
 
-```bash
-cd api-gateway && npm test && cd ..
-cd auth-service && npm test && cd ..
-cd core-service && npm test && cd ..
-cd mobile && npm test && cd ..
-```
-
-Auth tests require JWT secrets in the environment (defaults exist for local test if unset; CI sets them explicitly).
-
-## 4. Start the backend stack (Docker)
-
-From the repository root:
+## Docker
 
 ```bash
 docker compose up --build
 ```
 
-| Endpoint | URL |
-|----------|-----|
-| API Gateway (public) | `http://localhost:3000` |
-| Health | `GET http://localhost:3000/health` |
-| Auth (internal only) | container `:3001` — not published to host by default |
-| Core (internal only) | container `:3002` — not published to host by default |
-| Postgres | `localhost:5432` |
-| Redis | `localhost:6379` |
+## Environment
 
-> **Note:** Auth stores users in **Postgres** (`bivvy_auth`) — accounts survive restarts under Compose. Core listings and refresh tokens are still **in-memory** (Bootstrap).
-
-## 5. Start the mobile app
-
-```bash
-cd mobile
-# optional: export EXPO_PUBLIC_API_URL=http://localhost:3000
-npx expo start
-```
-
-Use a device/emulator that can reach your machine’s gateway URL (LAN IP instead of `localhost` when testing on a physical phone).
-
-## 6. Smoke-check the API
-
-```bash
-curl http://localhost:3000/health
-```
-
-Expected:
-
-```json
-{ "status": "ok", "service": "api-gateway" }
-```
-
-Register a user via the gateway:
-
-```bash
-curl -X POST http://localhost:3000/api/auth/register \
-  -H "Content-Type: application/json" \
-  -d "{\"email\":\"hiker@example.com\",\"password\":\"StrongPass1!\",\"name\":\"Alex\"}"
-```
-
-List nearby gear (public):
-
-```bash
-curl "http://localhost:3000/api/gear/near"
-```
-
-## Common issues
-
-| Symptom | Likely cause | Fix |
-|---------|--------------|-----|
-| CORS errors from Expo web | `CORS_ORIGIN` mismatch | Align with the Expo origin |
-| `Auth misconfigured` / 500 on protected routes | Missing `JWT_ACCESS_SECRET` on gateway | Set the same secret used by Auth |
-| Phone cannot reach API | `localhost` on device | Use your computer’s LAN IP in `EXPO_PUBLIC_API_URL` |
-| `npm ci` fails in CI | Lockfile out of sync | Run `npm install` inside that service and commit its `package-lock.json` |
-
-## Next reading
-
-- [Architecture](./architecture.md)
-- [API Overview](./api/overview.md)
-- [Security](./security.md)
+| Variable | Purpose |
+|----------|---------|
+| `PORT` | API port (default `3000`) |
+| `CORS_ORIGIN` | Comma-separated allowed origins |
+| `JWT_ACCESS_SECRET` | JWT signing secret |
+| `SEED_DEMO_USER` | Seed demo account on boot |
+| `DEMO_USER_EMAIL` / `DEMO_USER_PASSWORD` | Demo credentials |

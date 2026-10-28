@@ -2,74 +2,27 @@ name: CI
 
 on:
   push:
-    branches: [main, develop]
   pull_request:
-    branches: [main, develop]
 
 jobs:
-  api-gateway:
+  build-test:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: api-gateway
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: '22'
           cache: npm
-          cache-dependency-path: api-gateway/package-lock.json
-      - run: npm ci
-      - run: npm test
-      - run: docker build -t bivvy-api-gateway .
-
-  auth-service:
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: auth-service
-    env:
-      NODE_ENV: test
-      JWT_ACCESS_SECRET: ci_test_access_secret_min_32_chars
-      JWT_REFRESH_SECRET: ci_test_refresh_secret_min_32_chars
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: npm
-          cache-dependency-path: auth-service/package-lock.json
-      - run: npm ci
-      - run: npm test
-      - run: docker build -t bivvy-auth-service .
-
-  core-service:
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: core-service
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: npm
-          cache-dependency-path: core-service/package-lock.json
-      - run: npm ci
-      - run: npm test
-      - run: docker build -t bivvy-core-service .
-
-  mobile:
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: mobile
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: npm
-          cache-dependency-path: mobile/package-lock.json
-      - run: npm ci
-      - run: npm test
+          cache-dependency-path: |
+            server/package-lock.json
+            web/package-lock.json
+      - name: Server install & test
+        working-directory: server
+        run: |
+          npm install
+          npm test
+      - name: Web install & build
+        working-directory: web
+        run: |
+          npm install
+          npm run build
