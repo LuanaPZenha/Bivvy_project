@@ -15,7 +15,7 @@ Browser (web/)  --HTTP JSON-->  Express (server/)  --memory store-->  in-process
 | Security | `server/src/security/` | Headers, rate limits, passwords, plain-text limits, JWT checks |
 | Domain | `server/src/domain/`, `server/src/services/` | Booking transitions, listing rules, pricing, distance |
 | Persistence | `server/src/store/`, `server/src/data/` | In-memory Maps and Seattle seed data (Postgres Planned) |
-| Hosting | `api/[[...path]].js`, `vercel.json`, `public/` | Vercel runs one Express function for `/api`. The build copies `web/` to `public/` for the CDN |
+| Hosting | `api/gateway.js`, `vercel.json`, `public/` | Vercel runs one Express function for `/api` and `/health`. The build copies `web/` to `public/` for the CDN |
 
 ## Request flow
 

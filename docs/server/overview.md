@@ -25,4 +25,4 @@ npm run dev
 - `src/store/memoryStore.js` — process memory
 - `src/middleware/auth.js` — JWT (HS256)
 
-Vercel runs `api/[[...path]].js`, which calls `createApp({ seedOnRequest: true })`. Local `npm start` still boots `src/index.js`. Root `app.js` exports the same app for a local production boot check.
+Vercel runs `api/gateway.js`, which calls `createApp({ seedOnRequest: true })`. Local `npm start` still boots `src/index.js`. Root `app.js` exports the same app for a local production boot check.

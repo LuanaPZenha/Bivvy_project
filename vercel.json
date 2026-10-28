@@ -2,8 +2,9 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "buildCommand": "node scripts/copy-web-public.js",
   "rewrites": [
-    { "source": "/health", "destination": "/api/health" },
-    { "source": "/:path((?!api/|src/).*)", "destination": "/index.html" }
+    { "source": "/api/:path*", "destination": "/api/gateway?__bivvy_path=:path*" },
+    { "source": "/health", "destination": "/api/gateway?__bivvy_path=health" },
+    { "source": "/:path((?!api$|api/|src/).*)", "destination": "/index.html" }
   ],
   "headers": [
     {

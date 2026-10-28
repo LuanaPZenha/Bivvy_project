@@ -3,8 +3,18 @@
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
 const { createApp } = require('../../src/app');
+const { routeVercelRequest } = require('../../../api/gateway');
 
 describe('Vercel hosting', () => {
+  it('maps the Vercel rewrite query back onto the Express path', () => {
+    const req = { url: '/api/gateway?__bivvy_path=listings/near&zip=98103&sortBy=distance' };
+    routeVercelRequest(req);
+    assert.equal(req.url, '/api/listings/near?zip=98103&sortBy=distance');
+    const health = { url: '/api/gateway?__bivvy_path=health' };
+    routeVercelRequest(health);
+    assert.equal(health.url, '/health');
+  });
+
   it('trusts one proxy hop only on Vercel or when TRUST_PROXY=true', () => {
     const previousVercel = process.env.VERCEL;
     const previousTrust = process.env.TRUST_PROXY;

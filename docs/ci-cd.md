@@ -4,7 +4,7 @@
 
 GitHub Actions workflow `.github/workflows/ci.yml` installs `server/`, runs the full Node test suite (API, security, domain, and browser helpers), then `npm audit --omit=dev --audit-level=high`. The browser files in `web/` have no compile step.
 
-Vercel hosts the same app. `vercel.json` copies `web/` into `public/` during the build (the CDN serves that directory). `api/[[...path]].js` runs the Express app for `/api/*`. `/health` is rewritten to `/api/health`. Other paths that are not files fall back to `index.html`.
+Vercel hosts the same app. `vercel.json` copies `web/` into `public/` during the build (the CDN serves that directory). `api/gateway.js` runs the Express app. Rewrites send `/api/*` and `/health` there. Other paths that are not files fall back to `index.html`.
 
 Set these environment variables on the Vercel project before production traffic:
 
