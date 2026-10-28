@@ -2,9 +2,8 @@
 
 | | |
 |--|--|
-| Package | `bivvy-web` |
 | Directory | `web/` |
-| Stack | Vite + vanilla JavaScript (ES modules) |
+| Stack | HTML, CSS, JavaScript modules |
 | Status | Current |
 
 Hash-router SPA: Explore, listing detail, auth, profile, cart, favorites, rentals (pay/chat/review), my listings.
@@ -19,15 +18,6 @@ The same site is laid out for a phone browser (no install, no native app):
 - Inputs are 16px so mobile browsers do not zoom the page on focus.
 - Reviews and sign-in use on-page forms (the phone keyboard submits them).
 
-`npm run dev` listens on the LAN (`host: true`). On a phone on the same network, open the Vite URL printed in the terminal, or the production URL on port 3000 after `npm run build`.
-
-## Commands
-
-```bash
-cd web
-npm install
-npm run dev      # http://localhost:5173
-npm run build    # outputs dist/ for Express static
-```
+The site is static files. `server` serves them on port 3000 with the API. On a phone on the same network, open `http://<this-machine>:3000`.
 
 Brand tokens live in `web/src/styles.css` (forest / cream / gold). Product UI strings are English (US).

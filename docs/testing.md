@@ -12,4 +12,4 @@ Covers health, sorted near feed, and an end-to-end register → list → book �
 
 ## Web
 
-Manual smoke in the browser (Vite or production static). Automated UI tests are Planned.
+Open http://localhost:3000 after `npm start` and walk explore → listing → sign in. Automated UI tests are Planned.

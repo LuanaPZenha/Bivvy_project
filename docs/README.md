@@ -3,7 +3,7 @@
 > Product language: **English** (US market).  
 > Last reviewed: **2026-10-27**
 
-Bivvy is an outdoor adventure gear rental and resale **web marketplace**, rewritten as a pure **JavaScript** stack (Node API + vanilla JS SPA).
+Bivvy is an outdoor adventure gear rental and resale **web marketplace** in **JavaScript** (Node API + browser pages).
 
 ## Read in this order
 
@@ -32,12 +32,12 @@ Bivvy is an outdoor adventure gear rental and resale **web marketplace**, rewrit
 /
 ├── docs/
 ├── server/          Express API (JavaScript)
-├── web/             Vite SPA (vanilla JavaScript)
+├── web/             Browser app (HTML, CSS, JavaScript)
 ├── Dockerfile
 └── docker-compose.yml
 ```
 
-This is **not** an Expo app and **not** a multi-service mesh. One server process owns auth, listings, bookings, cart, chat, and reviews.
+One server process owns the site, auth, listings, bookings, cart, chat, and reviews.
 
 ## Status snapshot
 

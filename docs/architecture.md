@@ -10,25 +10,23 @@ Browser (web/)  --HTTP JSON-->  Express (server/)  --memory store-->  in-process
 
 | Layer | Tech |
 |-------|------|
-| Web | Vite + vanilla ES modules (no React, no TypeScript) |
+| Web | HTML, CSS, and JavaScript modules served by Express |
 | API | Node.js + Express |
 | Auth | bcryptjs + JWT |
 | Data | In-memory Maps seeded with Seattle listings (Postgres Planned) |
 
 ## Request flow
 
-1. SPA loads from Vite (dev) or `web/dist` via Express static (prod).
-2. Browser calls `/api/*`.
-3. JWT `Authorization: Bearer` protects owner/renter actions.
+1. The browser loads `web/index.html` and ES modules from the same Express process.
+2. The page calls `/api/*` on that origin.
+3. JWT `Authorization: Bearer` protects owner and renter actions.
 4. Booking lifecycle: `requested → accepted → paid → completed` (or decline/cancel).
 
-## Why this shape
-
-The previous Expo + gateway + auth-service + core-service layout optimized for mobile polyrepo scale. v2 prioritizes:
+## Shape
 
 - One language (JavaScript) end-to-end
-- One deployable unit
-- Fast local demo of a full marketplace loop (browse → book → pay → chat → review)
+- One deployable process
+- Marketplace loop in the browser: browse → book → pay → chat → review
 
 ## Planned
 

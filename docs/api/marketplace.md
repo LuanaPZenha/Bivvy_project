@@ -2,17 +2,17 @@
 
 ## Discovery
 
-### GET `/api/gear/near`
+### GET `/api/listings/near`
 
 Query: `category`, `mode`, `q`, `maxDistance`, `zip`, `sort` (`distance` \| `price_asc` \| `price_desc` \| `rating`).
 
-### GET `/api/gear/:id`
+### GET `/api/listings/:id`
 
-### POST `/api/gear/:id/quote`
+### POST `/api/listings/:id/quote`
 
 Rent requires `startDate` / `endDate` (`YYYY-MM-DD`).
 
-### GET `/api/gear/:id/reviews`
+### GET `/api/listings/:id/reviews`
 
 ## Listings (JWT)
 

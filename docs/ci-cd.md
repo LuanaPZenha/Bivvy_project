@@ -2,7 +2,7 @@
 
 ## Current
 
-GitHub Actions workflow `.github/workflows/ci.yml` installs and tests `server/`, then builds `web/`.
+GitHub Actions workflow `.github/workflows/ci.yml` installs and tests `server/`. The browser files in `web/` have no build step.
 
 ## Planned
 

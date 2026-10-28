@@ -8,7 +8,6 @@ services:
     environment:
       NODE_ENV: production
       PORT: 3000
-      CORS_ORIGIN: http://localhost:3000,http://localhost:5173
       JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:-dev-compose-change-me}
       SEED_DEMO_USER: "true"
       DEMO_USER_EMAIL: demo@bivvy.test
