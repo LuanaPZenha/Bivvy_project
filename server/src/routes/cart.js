@@ -5,6 +5,7 @@ const { requireAuth } = require('../middleware/auth');
 const { httpError } = require('../middleware/errors');
 const { calculateBuyPricing } = require('../services/pricing');
 const { newId } = require('../store/memoryStore');
+const { plain } = require('../security/text');
 
 function toIsoToday() {
   return new Date().toISOString().slice(0, 10);
@@ -21,9 +22,12 @@ function createCartRouter(store) {
 
   router.post('/checkout', requireAuth, (req, res, next) => {
     try {
-      const listingIds = Array.isArray(req.body.listingIds) ? req.body.listingIds.map(String) : [];
+      const listingIds = Array.isArray(req.body.listingIds)
+        ? [...new Set(req.body.listingIds.map(String))]
+        : [];
       if (!listingIds.length) throw httpError(400, 'listingIds is required');
-      const message = String(req.body.message || 'Cart checkout').trim();
+      if (listingIds.length > 20) throw httpError(400, 'Cart checkout accepts at most 20 listings');
+      const message = plain(req.body.message || 'Cart checkout', 1000);
       const results = [];
 
       for (const listingId of listingIds) {

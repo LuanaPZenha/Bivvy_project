@@ -6,20 +6,8 @@ const { newId } = require('../store/memoryStore');
 const { requireAuth } = require('../middleware/auth');
 const { httpError } = require('../middleware/errors');
 const { calculateRentalPricing, calculateBuyPricing } = require('../services/pricing');
-
-const OWNER_STATUSES = new Set(['accepted', 'declined', 'completed']);
-const TRANSITIONS = {
-  requested: ['accepted', 'declined', 'cancelled'],
-  accepted: ['paid', 'cancelled', 'completed'],
-  paid: ['completed', 'cancelled'],
-  declined: [],
-  cancelled: [],
-  completed: [],
-};
-
-function rangesOverlap(aStart, aEnd, bStart, bEnd) {
-  return aStart < bEnd && bStart < aEnd;
-}
+const { canTransition, rangesOverlap } = require('../domain/bookingPolicy');
+const { isoDate, plain } = require('../security/text');
 
 function toIsoToday() {
   return new Date().toISOString().slice(0, 10);
@@ -74,9 +62,8 @@ function createBookingsRouter(store) {
         startDate = toIsoToday();
         endDate = addDays(startDate, 1);
       } else {
-        startDate = String(req.body.startDate || '');
-        endDate = String(req.body.endDate || '');
-        if (!startDate || !endDate) throw httpError(400, 'startDate and endDate are required');
+        startDate = isoDate(req.body.startDate, 'startDate');
+        endDate = isoDate(req.body.endDate, 'endDate');
         if ((listing.blockedDates || []).some((d) => d >= startDate && d < endDate)) {
           throw httpError(409, 'Selected dates include blocked availability');
         }
@@ -106,7 +93,7 @@ function createBookingsRouter(store) {
         endDate,
         status: 'requested',
         pricing,
-        message: String(req.body.message || '').trim().slice(0, 1000),
+        message: plain(req.body.message, 1000),
         payment: null,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
@@ -122,19 +109,9 @@ function createBookingsRouter(store) {
     try {
       const booking = store.bookings.get(req.params.id);
       if (!booking) throw httpError(404, 'Booking not found');
-      const isOwner = booking.ownerId === req.user.id;
-      const isRenter = booking.renterId === req.user.id;
-      if (!isOwner && !isRenter) throw httpError(403, 'Forbidden');
-
-      const status = String(req.body.status || '').toLowerCase();
-      if (OWNER_STATUSES.has(status) && !isOwner) {
-        throw httpError(403, 'Only the owner can update booking to this status');
-      }
-      const allowed = TRANSITIONS[booking.status] || [];
-      if (!allowed.includes(status)) {
-        throw httpError(400, `Cannot transition booking from ${booking.status} to ${status}`);
-      }
-      booking.status = status;
+      const decision = canTransition(booking, req.user.id, req.body.status);
+      if (!decision.ok) throw httpError(decision.status, decision.message);
+      booking.status = decision.nextStatus;
       booking.updatedAt = new Date().toISOString();
       store.bookings.set(booking.id, booking);
       res.json(enrichBooking(store, booking));
@@ -222,9 +199,8 @@ function createBookingsRouter(store) {
       if (booking.renterId !== req.user.id && booking.ownerId !== req.user.id) {
         throw httpError(403, 'Forbidden');
       }
-      const body = String(req.body.body || '').trim();
+      const body = plain(req.body.body, 2000);
       if (!body) throw httpError(400, 'Message body is required');
-      if (body.length > 2000) throw httpError(400, 'Message body is too long');
       const message = {
         id: newId('msg'),
         bookingId: booking.id,

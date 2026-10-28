@@ -1,6 +1,9 @@
 import { getUser, clearSession } from '../lib/api.js';
 import { getCart, getFavorites } from '../lib/store.js';
 import { currentPath, navigate } from '../lib/router.js';
+import { escapeHtml } from '../lib/escape.js';
+
+export { escapeHtml };
 
 const ICONS = {
   explore: `<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M14.8 9.2l-1.3 4.3-4.3 1.3 1.3-4.3 4.3-1.3z"/></svg>`,
@@ -95,10 +98,3 @@ export function wireShell(root) {
   });
 }
 
-export function escapeHtml(value) {
-  return String(value ?? '')
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;');
-}

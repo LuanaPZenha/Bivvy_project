@@ -5,6 +5,8 @@ const express = require('express');
 const helmet = require('helmet');
 const morgan = require('morgan');
 const config = require('./config');
+const { helmetOptions } = require('./security/headers');
+const { createAuthRateLimit } = require('./security/rateLimit');
 const { createStore } = require('./store/memoryStore');
 const { createAuthRouter, seedDemoUser } = require('./routes/auth');
 const { createListingsRouter } = require('./routes/listings');
@@ -17,7 +19,8 @@ function createApp(overrides = {}) {
   const app = express();
 
   app.disable('x-powered-by');
-  app.use(helmet({ contentSecurityPolicy: false }));
+  if (process.env.TRUST_PROXY === 'true') app.set('trust proxy', 1);
+  app.use(helmet(helmetOptions()));
   app.use(express.json({ limit: '100kb' }));
   if (process.env.NODE_ENV !== 'test') {
     app.use(morgan(config.nodeEnv === 'production' ? 'combined' : 'dev'));
@@ -37,13 +40,16 @@ function createApp(overrides = {}) {
   });
 
   const listingsRouter = createListingsRouter(store);
+  const authLimit = overrides.authRateLimit || createAuthRateLimit();
+  app.use('/api/auth/login', authLimit);
+  app.use('/api/auth/register', authLimit);
   app.use('/api/auth', createAuthRouter(store));
   app.use('/api/listings', listingsRouter);
   app.use('/api/bookings', createBookingsRouter(store));
   app.use('/api/cart', createCartRouter(store));
 
   const webRoot = path.join(__dirname, '../../web');
-  app.use(express.static(webRoot));
+  app.use(express.static(webRoot, { dotfiles: 'deny', index: 'index.html', redirect: false }));
   app.get('*', (req, res, next) => {
     if (req.path.startsWith('/api')) return next();
     res.sendFile(path.join(webRoot, 'index.html'), (err) => {

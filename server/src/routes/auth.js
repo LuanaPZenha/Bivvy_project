@@ -1,10 +1,11 @@
 'use strict';
 
 const { Router } = require('express');
-const bcrypt = require('bcryptjs');
 const { newId } = require('../store/memoryStore');
 const { signToken, requireAuth } = require('../middleware/auth');
-const { httpError } = require('../middleware/errors');
+const { httpError } = require('../http/errors');
+const { assertPassword, hashPassword, verifyPassword } = require('../security/passwords');
+const { emailAddress, plain } = require('../security/text');
 const config = require('../config');
 
 function publicUser(user) {
@@ -22,15 +23,10 @@ function createAuthRouter(store) {
 
   router.post('/register', async (req, res, next) => {
     try {
-      const email = String(req.body.email || '')
-        .trim()
-        .toLowerCase();
-      const password = String(req.body.password || '');
-      const name = String(req.body.name || '').trim() || 'Bivvy member';
-      const phone = req.body.phone ? String(req.body.phone).trim() : null;
-
-      if (!email || !password) throw httpError(400, 'Email and password are required');
-      if (password.length < 8) throw httpError(400, 'Password must be at least 8 characters');
+      const email = emailAddress(req.body.email);
+      const password = assertPassword(req.body.password);
+      const name = plain(req.body.name, 80) || 'Bivvy member';
+      const phone = req.body.phone ? plain(req.body.phone, 20) : null;
       if (!req.body.acceptTerms) throw httpError(400, 'You must accept the terms');
 
       for (const user of store.users.values()) {
@@ -43,7 +39,7 @@ function createAuthRouter(store) {
         name,
         phone,
         role: 'both',
-        passwordHash: await bcrypt.hash(password, 10),
+        passwordHash: await hashPassword(password),
         createdAt: new Date().toISOString(),
       };
       store.users.set(user.id, user);
@@ -56,11 +52,9 @@ function createAuthRouter(store) {
 
   router.post('/login', async (req, res, next) => {
     try {
-      const email = String(req.body.email || '')
-        .trim()
-        .toLowerCase();
+      const email = emailAddress(req.body.email);
       const password = String(req.body.password || '');
-      if (!email || !password) throw httpError(400, 'Email and password are required');
+      if (!password) throw httpError(400, 'Email and password are required');
 
       let found = null;
       for (const user of store.users.values()) {
@@ -70,7 +64,7 @@ function createAuthRouter(store) {
         }
       }
       if (!found) throw httpError(401, 'Invalid email or password');
-      const ok = await bcrypt.compare(password, found.passwordHash);
+      const ok = await verifyPassword(password, found.passwordHash);
       if (!ok) throw httpError(401, 'Invalid email or password');
 
       res.json({ accessToken: signToken(found), user: publicUser(found) });
@@ -104,11 +98,11 @@ async function seedDemoUser(store) {
     name: 'Demo Camper',
     phone: null,
     role: 'both',
-    passwordHash: await bcrypt.hash(config.demoPassword, 10),
+    passwordHash: await hashPassword(config.demoPassword),
     createdAt: new Date().toISOString(),
   };
   store.users.set(user.id, user);
-  console.log(`[bivvy] demo user ready: ${email} / ${config.demoPassword}`);
+  console.log(`[bivvy] demo user ready: ${email}`);
 }
 
 module.exports = { createAuthRouter, seedDemoUser };

@@ -29,7 +29,7 @@ export async function renderRentals() {
                   const isRenter = b.renterId === user.id;
                   return `
               <article class="panel stack" data-booking="${b.id}">
-                <div class="list-row" style="border:0;padding:0">
+                <div class="list-row flat">
                   <div>
                     <strong>${escapeHtml(b.listing?.title || b.listingId)}</strong>
                     <div class="meta">${b.status.toUpperCase()} · ${b.startDate} → ${b.endDate} · $${Number(b.pricing?.total || 0).toFixed(2)}</div>
