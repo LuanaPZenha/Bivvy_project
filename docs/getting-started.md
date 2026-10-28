@@ -25,6 +25,8 @@ cd web && npm run dev
 
 Open http://localhost:5173 (Vite proxies `/api` to `:3000`).
 
+On a phone, use the same Wi-Fi and open the Network URL Vite prints (`npm run dev` binds the LAN). The layout is built for the phone browser: bottom tabs, filter sheet, and a fixed booking bar.
+
 Demo account (seeded): `demo@bivvy.test` / `BivvyDemo123`
 
 ## Production-style (API serves built web)

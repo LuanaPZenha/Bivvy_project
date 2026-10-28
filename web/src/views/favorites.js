@@ -7,7 +7,7 @@ export function renderFavorites() {
   return {
     html: `
       <section class="panel stack">
-        <h1 style="margin:0;font-family:Fraunces,serif">Saved gear</h1>
+        <h1 class="page-title">Saved gear</h1>
         ${
           items.length === 0
             ? '<p class="muted">No saved listings yet. Tap ♥ on Explore.</p>'
@@ -15,11 +15,14 @@ export function renderFavorites() {
                 .map(
                   (listing) => `
               <article class="card">
-                <div class="card-body">
-                  <h3>${escapeHtml(listing.title)}</h3>
-                  <div class="price">${priceLabel(listing)}</div>
-                  <button class="btn" data-open="${listing.id}">Open</button>
-                  <button class="btn secondary" data-remove="${listing.id}">Remove</button>
+                <a class="card-link" href="#/listing/${listing.id}" data-link="/listing/${listing.id}">
+                  <div class="card-body">
+                    <h3>${escapeHtml(listing.title)}</h3>
+                    <div class="price">${priceLabel(listing)}</div>
+                  </div>
+                </a>
+                <div class="card-actions">
+                  <button class="btn secondary" type="button" data-remove="${listing.id}">Remove</button>
                 </div>
               </article>`,
                 )
@@ -28,9 +31,6 @@ export function renderFavorites() {
       </section>
     `,
     bind(root) {
-      root.querySelectorAll('[data-open]').forEach((btn) => {
-        btn.addEventListener('click', () => navigate(`/listing/${btn.dataset.open}`));
-      });
       root.querySelectorAll('[data-remove]').forEach((btn) => {
         btn.addEventListener('click', () => {
           const listing = items.find((i) => i.id === btn.dataset.remove);

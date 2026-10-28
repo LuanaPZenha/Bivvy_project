@@ -19,7 +19,7 @@ export async function renderRentals() {
   return {
     html: `
       <section class="panel stack">
-        <h1 style="margin:0;font-family:Fraunces,serif">My rentals</h1>
+        <h1 class="page-title">My rentals</h1>
         ${
           bookings.length === 0
             ? '<p class="muted">No bookings yet.</p>'
@@ -36,18 +36,35 @@ export async function renderRentals() {
                     <div class="meta">${escapeHtml(b.message || '')}</div>
                   </div>
                 </div>
-                <div class="nav-actions" id="actions-${b.id}">
-                  ${isOwner && b.status === 'requested' ? `<button class="btn" data-act="accepted">Accept</button><button class="btn danger" data-act="declined">Decline</button>` : ''}
-                  ${isRenter && b.status === 'requested' ? `<button class="btn secondary" data-act="cancelled">Cancel</button>` : ''}
-                  ${isRenter && b.status === 'accepted' ? `<button class="btn gold" data-pay>Pay now</button>` : ''}
-                  ${isOwner && (b.status === 'accepted' || b.status === 'paid') ? `<button class="btn" data-act="completed">Mark completed</button>` : ''}
-                  ${isRenter && b.status === 'completed' ? `<button class="btn secondary" data-review>Leave review</button>` : ''}
-                  <button class="btn secondary" data-chat>Messages</button>
+                <div class="action-row" id="actions-${b.id}">
+                  ${isOwner && b.status === 'requested' ? `<button class="btn" type="button" data-act="accepted">Accept</button><button class="btn danger" type="button" data-act="declined">Decline</button>` : ''}
+                  ${isRenter && b.status === 'requested' ? `<button class="btn secondary" type="button" data-act="cancelled">Cancel</button>` : ''}
+                  ${isRenter && b.status === 'accepted' ? `<button class="btn gold" type="button" data-pay>Pay now</button>` : ''}
+                  ${isOwner && (b.status === 'accepted' || b.status === 'paid') ? `<button class="btn" type="button" data-act="completed">Mark completed</button>` : ''}
+                  ${isRenter && b.status === 'completed' ? `<button class="btn secondary" type="button" data-review>Leave review</button>` : ''}
+                  <button class="btn secondary" type="button" data-chat>Messages</button>
                 </div>
+                <form class="review-form stack" id="review-${b.id}" hidden>
+                  <div class="field">
+                    <label for="rating-${b.id}">Rating</label>
+                    <select id="rating-${b.id}">
+                      <option value="5">5 — Excellent</option>
+                      <option value="4">4 — Good</option>
+                      <option value="3">3 — Okay</option>
+                      <option value="2">2 — Poor</option>
+                      <option value="1">1 — Bad</option>
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label for="comment-${b.id}">Comment</label>
+                    <textarea id="comment-${b.id}" rows="3" placeholder="How was the gear?"></textarea>
+                  </div>
+                  <button class="btn" type="submit">Submit review</button>
+                </form>
                 <div class="chat" id="chat-${b.id}" hidden></div>
-                <div class="search-row" id="composer-${b.id}" hidden>
-                  <input placeholder="Write a message…" id="input-${b.id}" />
-                  <button class="btn" data-send>Send</button>
+                <div class="search-row composer" id="composer-${b.id}" hidden>
+                  <input placeholder="Write a message…" id="input-${b.id}" enterkeyhint="send" autocomplete="off" />
+                  <button class="btn" type="button" data-send>Send</button>
                 </div>
                 <div id="status-${b.id}"></div>
               </article>`;
@@ -82,15 +99,21 @@ export async function renderRentals() {
           }
         });
 
-        card.querySelector('[data-review]')?.addEventListener('click', async () => {
-          const rating = Number(prompt('Rating 1-5', '5'));
-          const comment = prompt('Comment (optional)', 'Great gear') || '';
+        const reviewForm = card.querySelector(`#review-${booking.id}`);
+        card.querySelector('[data-review]')?.addEventListener('click', () => {
+          reviewForm.hidden = !reviewForm.hidden;
+        });
+        reviewForm?.addEventListener('submit', async (event) => {
+          event.preventDefault();
+          const rating = Number(card.querySelector(`#rating-${booking.id}`).value);
+          const comment = card.querySelector(`#comment-${booking.id}`).value;
           try {
             await ListingsApi.review(booking.listingId, {
               bookingId: booking.id,
               rating,
               comment,
             });
+            reviewForm.hidden = true;
             statusEl.innerHTML = '<span class="success">Review submitted.</span>';
           } catch (err) {
             statusEl.innerHTML = `<span class="error">${escapeHtml(err.message)}</span>`;

@@ -9,7 +9,7 @@ export function renderCart() {
   return {
     html: `
       <section class="panel stack">
-        <h1 style="margin:0;font-family:Fraunces,serif">Cart</h1>
+        <h1 class="page-title">Cart</h1>
         ${
           items.length === 0
             ? '<p class="muted">Your cart is empty.</p>'
@@ -21,13 +21,13 @@ export function renderCart() {
                 <strong>${escapeHtml(item.title)}</strong>
                 <div class="meta">${priceLabel(item)}</div>
               </div>
-              <button class="btn secondary" data-remove="${item.id}">Remove</button>
+              <button class="btn secondary" type="button" data-remove="${item.id}">Remove</button>
             </div>`,
                 )
                 .join('')
         }
         <div class="price">Subtotal $${subtotal.toFixed(2)}</div>
-        <button class="btn" id="checkout" ${items.length ? '' : 'disabled'}>Request purchase</button>
+        <button class="btn" type="button" id="checkout" ${items.length ? '' : 'disabled'}>Request purchase</button>
         <div id="status"></div>
       </section>
     `,

@@ -1,6 +1,5 @@
 import { GearApi } from '../lib/api.js';
-import { isFavorite, toggleFavorite, priceLabel } from '../lib/store.js';
-import { navigate } from '../lib/router.js';
+import { isFavorite, toggleFavorite, priceLabel, formatMiles } from '../lib/store.js';
 import { escapeHtml } from './layout.js';
 
 const CATEGORIES = [
@@ -25,37 +24,50 @@ export async function renderHome() {
 
   const html = `
     <section class="hero">
-      <div class="brand" style="color:#F3EFE6">BIVVY</div>
+      <p class="eyebrow">BIVVY</p>
       <h1>Gear for the next trail</h1>
       <p>Rent or buy camping, hiking, climbing, water, snow, and bike gear near Seattle.</p>
       <div>
-        <button class="btn gold" data-link="/register">Start exploring</button>
+        <button class="btn gold" type="button" id="browse-jump">Browse gear</button>
       </div>
     </section>
 
-    <section class="toolbar panel">
-      <div class="mode-toggle" id="mode-toggle">
+    <section class="toolbar panel" id="browse">
+      <div class="mode-toggle" id="mode-toggle" role="tablist" aria-label="Rent or buy">
         <button type="button" data-mode="rent" class="active">Rent</button>
         <button type="button" data-mode="buy">Buy</button>
       </div>
       <div class="search-row">
-        <input id="search" placeholder="Search tents, kayaks, skis..." />
-        <button class="btn gold" id="filters-btn" type="button">Filters</button>
+        <input id="search" type="search" enterkeyhint="search" autocomplete="off" placeholder="Search tents, kayaks, skis..." />
+        <button class="btn gold" id="filters-btn" type="button" aria-expanded="false" aria-controls="filter-root">Filters</button>
       </div>
-      <div class="chips" id="categories">
+      <div class="chips scroll-row" id="categories">
         ${CATEGORIES.map(
           ([id, label]) =>
-            `<button class="chip ${id === 'all' ? 'active' : ''}" data-category="${id}">${label}</button>`,
+            `<button type="button" class="chip ${id === 'all' ? 'active' : ''}" data-category="${id}">${label}</button>`,
         ).join('')}
       </div>
-      <div id="filter-panel" class="stack" hidden>
-        <div class="chips" id="distance-chips">
-          ${[5, 10, 25, 50]
-            .map(
-              (n) =>
-                `<button class="chip ${n === 25 ? 'active' : ''}" data-distance="${n}">${n} mi</button>`,
-            )
-            .join('')}
+      <div class="meta" id="feed-meta">Loading…</div>
+    </section>
+
+    <div id="filter-root" hidden>
+      <button type="button" class="sheet-backdrop" id="filter-backdrop" aria-label="Close filters"></button>
+      <div id="filter-panel" class="sheet-panel stack" role="dialog" aria-modal="true" aria-labelledby="filter-title">
+        <div class="sheet-handle" aria-hidden="true"></div>
+        <div class="sheet-head">
+          <h2 id="filter-title">Filters</h2>
+          <button type="button" class="btn secondary" id="filter-close">Close</button>
+        </div>
+        <div class="field">
+          <span class="field-label">Distance</span>
+          <div class="chips" id="distance-chips">
+            ${[5, 10, 25, 50]
+              .map(
+                (n) =>
+                  `<button type="button" class="chip ${n === 25 ? 'active' : ''}" data-distance="${n}">${n} mi</button>`,
+              )
+              .join('')}
+          </div>
         </div>
         <div class="field">
           <label for="sort">Sort by</label>
@@ -66,9 +78,9 @@ export async function renderHome() {
             <option value="rating">Top rated</option>
           </select>
         </div>
+        <button class="btn" type="button" id="filter-done">Show gear</button>
       </div>
-      <div class="meta" id="feed-meta">Loading…</div>
-    </section>
+    </div>
 
     <section class="grid" id="feed"></section>
   `;
@@ -78,7 +90,14 @@ export async function renderHome() {
     bind(root) {
       const feed = root.querySelector('#feed');
       const meta = root.querySelector('#feed-meta');
-      const filterPanel = root.querySelector('#filter-panel');
+      const filterRoot = root.querySelector('#filter-root');
+      const filtersBtn = root.querySelector('#filters-btn');
+
+      function setFilters(open) {
+        filterRoot.hidden = !open;
+        filtersBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+        document.body.classList.toggle('sheet-open', open);
+      }
 
       async function load() {
         meta.textContent = 'Loading…';
@@ -97,24 +116,21 @@ export async function renderHome() {
               const fav = isFavorite(listing.id);
               return `
               <article class="card">
+                <a class="card-stretch" href="#/listing/${listing.id}" data-link="/listing/${listing.id}" aria-label="View ${escapeHtml(listing.title)}"></a>
                 <div class="card-thumb ${listing.thumbnailTone === 'brown' ? 'brown' : ''}">
                   ${listing.isPro ? '<span class="badge">PRO</span>' : ''}
-                  <button class="heart" data-fav="${listing.id}" aria-label="Save">${fav ? '♥' : '♡'}</button>
+                  <button type="button" class="heart ${fav ? 'saved' : ''}" data-fav="${listing.id}" aria-label="${fav ? 'Remove from saved' : 'Save'}">${fav ? '♥' : '♡'}</button>
                 </div>
                 <div class="card-body">
-                  <h3><a href="#/listing/${listing.id}">${escapeHtml(listing.title)}</a></h3>
+                  <h3>${escapeHtml(listing.title)}</h3>
                   <div class="meta">${escapeHtml(listing.ownerName)} · ★ ${listing.rating} (${listing.reviewCount})</div>
                   <div class="price">${priceLabel(listing)}</div>
-                  <div class="meta">${listing.distanceMiles} mi · ${listing.mode}</div>
-                  <button class="btn" data-open="${listing.id}">View</button>
+                    <div class="meta">${formatMiles(listing.distanceMiles)} · ${listing.mode}</div>
                 </div>
               </article>`;
             })
             .join('');
 
-          feed.querySelectorAll('[data-open]').forEach((btn) => {
-            btn.addEventListener('click', () => navigate(`/listing/${btn.dataset.open}`));
-          });
           feed.querySelectorAll('[data-fav]').forEach((btn) => {
             btn.addEventListener('click', (e) => {
               e.stopPropagation();
@@ -157,9 +173,10 @@ export async function renderHome() {
         }, 250);
       });
 
-      root.querySelector('#filters-btn').addEventListener('click', () => {
-        filterPanel.hidden = !filterPanel.hidden;
-      });
+      filtersBtn.addEventListener('click', () => setFilters(filterRoot.hidden));
+      root.querySelector('#filter-backdrop').addEventListener('click', () => setFilters(false));
+      root.querySelector('#filter-close').addEventListener('click', () => setFilters(false));
+      root.querySelector('#filter-done').addEventListener('click', () => setFilters(false));
 
       root.querySelector('#distance-chips').addEventListener('click', (e) => {
         const btn = e.target.closest('[data-distance]');
@@ -175,9 +192,8 @@ export async function renderHome() {
         load();
       });
 
-      root.querySelector('[data-link="/register"]')?.addEventListener('click', (e) => {
-        e.preventDefault();
-        navigate('/register');
+      root.querySelector('#browse-jump').addEventListener('click', () => {
+        root.querySelector('#browse')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       });
 
       load();

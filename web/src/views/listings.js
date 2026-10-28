@@ -20,7 +20,7 @@ export async function renderMyListings() {
     html: `
       <section class="split">
         <div class="panel stack">
-          <h1 style="margin:0;font-family:Fraunces,serif">My listings</h1>
+          <h1 class="page-title">My listings</h1>
           ${
             listings.length === 0
               ? '<p class="muted">No listings yet.</p>'
@@ -33,9 +33,9 @@ export async function renderMyListings() {
                   <div class="meta">${l.mode} · ${priceLabel(l)} · ${escapeHtml(l.location || '')}</div>
                   <div class="meta">Blocked: ${(l.blockedDates || []).join(', ') || 'none'}</div>
                 </div>
-                <div class="nav-actions">
-                  <button class="btn secondary" data-edit="${l.id}">Edit</button>
-                  <button class="btn danger" data-del="${l.id}">Delete</button>
+                <div class="action-row">
+                  <button class="btn secondary" type="button" data-edit="${l.id}">Edit</button>
+                  <button class="btn danger" type="button" data-del="${l.id}">Delete</button>
                 </div>
               </div>`,
                   )
@@ -43,7 +43,7 @@ export async function renderMyListings() {
           }
         </div>
         <form class="panel stack" id="listing-form">
-          <h3 style="margin:0" id="form-title">New listing</h3>
+          <h2 class="section-title" id="form-title">New listing</h2>
           <input type="hidden" id="edit-id" />
           <div class="field"><label>Title</label><input id="title" required /></div>
           <div class="field"><label>Mode</label>
@@ -84,6 +84,7 @@ export async function renderMyListings() {
       root.querySelectorAll('[data-edit]').forEach((btn) => {
         btn.addEventListener('click', () => {
           fill(listings.find((l) => l.id === btn.dataset.edit));
+          root.querySelector('#listing-form')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
         });
       });
 

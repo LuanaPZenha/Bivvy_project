@@ -50,4 +50,4 @@ docker compose up --build
 
 ## What shipped
 
-Explore (rent/buy, search, filters), listing detail, booking + simulated pay, cart, favorites, owner listings (create/edit/delete + blocked dates), booking chat, reviews.
+Explore (rent/buy, search, filters), listing detail, booking + simulated pay, cart, favorites, owner listings (create/edit/delete + blocked dates), booking chat, reviews. Phone browsers get a bottom tab bar, a filter sheet, and a thumb-reachable booking bar.

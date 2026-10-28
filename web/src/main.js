@@ -12,6 +12,20 @@ import { renderMyListings } from './views/listings.js';
 
 const app = document.getElementById('app');
 
+document.addEventListener('focusin', (event) => {
+  if (event.target.matches?.('input, textarea, select')) {
+    document.body.classList.add('keyboard-open');
+  }
+});
+document.addEventListener('focusout', () => {
+  setTimeout(() => {
+    const active = document.activeElement;
+    if (!active?.matches?.('input, textarea, select')) {
+      document.body.classList.remove('keyboard-open');
+    }
+  }, 80);
+});
+
 async function resolve(path) {
   if (path === '/' || path === '') return renderHome();
   if (path === '/login') return renderLogin();
@@ -31,9 +45,12 @@ async function resolve(path) {
 
 async function render(path = currentPath()) {
   const view = await resolve(path);
+  document.body.classList.toggle('listing-route', path.startsWith('/listing/'));
+  document.body.classList.remove('sheet-open', 'keyboard-open');
   app.innerHTML = renderShell(view.html);
   wireShell(app);
   view.bind?.(app.querySelector('#view'));
+  window.scrollTo(0, 0);
 }
 
 onRoute(render);

@@ -5,18 +5,19 @@ import { escapeHtml } from './layout.js';
 export function renderLogin() {
   return {
     html: `
-      <section class="panel stack" style="max-width:460px;margin:24px auto">
-        <h1 style="margin:0;font-family:Fraunces,serif">Welcome back</h1>
+      <form class="panel stack auth-card" id="auth-form">
+        <h1 class="page-title">Welcome back</h1>
         <p class="muted">Sign in to rent, buy, and manage gear.</p>
-        <div class="field"><label>Email</label><input id="email" type="email" value="demo@bivvy.test" /></div>
-        <div class="field"><label>Password</label><input id="password" type="password" value="BivvyDemo123" /></div>
-        <button class="btn" id="submit">Sign in</button>
+        <div class="field"><label for="email">Email</label><input id="email" type="email" autocomplete="email" inputmode="email" enterkeyhint="next" value="demo@bivvy.test" /></div>
+        <div class="field"><label for="password">Password</label><input id="password" type="password" autocomplete="current-password" enterkeyhint="go" value="BivvyDemo123" /></div>
+        <button class="btn" type="submit" id="submit">Sign in</button>
         <div id="status"></div>
-        <p class="muted">No account? <a href="#/register">Create one</a></p>
-      </section>
+        <p class="muted">No account? <a href="#/register" data-link="/register">Create one</a></p>
+      </form>
     `,
     bind(root) {
-      root.querySelector('#submit').addEventListener('click', async () => {
+      root.querySelector('#auth-form').addEventListener('submit', async (event) => {
+        event.preventDefault();
         const status = root.querySelector('#status');
         status.textContent = 'Signing in…';
         try {
@@ -37,20 +38,21 @@ export function renderLogin() {
 export function renderRegister() {
   return {
     html: `
-      <section class="panel stack" style="max-width:460px;margin:24px auto">
-        <h1 style="margin:0;font-family:Fraunces,serif">Create account</h1>
+      <form class="panel stack auth-card" id="auth-form">
+        <h1 class="page-title">Create account</h1>
         <p class="muted">Join Bivvy to list gear or book your next trip.</p>
-        <div class="field"><label>Name</label><input id="name" /></div>
-        <div class="field"><label>Email</label><input id="email" type="email" /></div>
-        <div class="field"><label>Password</label><input id="password" type="password" placeholder="At least 8 characters" /></div>
-        <label><input id="terms" type="checkbox" /> I accept the terms</label>
-        <button class="btn gold" id="submit">Create account</button>
+        <div class="field"><label for="name">Name</label><input id="name" autocomplete="name" enterkeyhint="next" /></div>
+        <div class="field"><label for="email">Email</label><input id="email" type="email" autocomplete="email" inputmode="email" enterkeyhint="next" /></div>
+        <div class="field"><label for="password">Password</label><input id="password" type="password" autocomplete="new-password" enterkeyhint="go" placeholder="At least 8 characters" /></div>
+        <label class="check"><input id="terms" type="checkbox" /> I accept the terms</label>
+        <button class="btn gold" type="submit" id="submit">Create account</button>
         <div id="status"></div>
-        <p class="muted">Already have an account? <a href="#/login">Sign in</a></p>
-      </section>
+        <p class="muted">Already have an account? <a href="#/login" data-link="/login">Sign in</a></p>
+      </form>
     `,
     bind(root) {
-      root.querySelector('#submit').addEventListener('click', async () => {
+      root.querySelector('#auth-form').addEventListener('submit', async (event) => {
+        event.preventDefault();
         const status = root.querySelector('#status');
         status.textContent = 'Creating…';
         try {

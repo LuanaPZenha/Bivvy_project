@@ -1,5 +1,5 @@
 import { GearApi, BookingsApi, getUser } from '../lib/api.js';
-import { addToCart, isFavorite, toggleFavorite, priceLabel } from '../lib/store.js';
+import { addToCart, isFavorite, toggleFavorite, priceLabel, formatMiles } from '../lib/store.js';
 import { navigate } from '../lib/router.js';
 import { escapeHtml } from './layout.js';
 
@@ -30,19 +30,49 @@ export async function renderListing(id) {
 
   const dates = defaultDates();
   const html = `
-    <button class="btn secondary" data-back>← Back</button>
-    <div class="split" style="margin-top:16px">
-      <section class="panel stack">
-        <div class="card-thumb ${listing.thumbnailTone === 'brown' ? 'brown' : ''}" style="height:240px;border-radius:12px">
+    <button class="btn secondary back-btn" type="button" data-back>← Back</button>
+    <div class="split detail-layout">
+      <section class="panel stack detail-hero">
+        <div class="card-thumb detail-thumb ${listing.thumbnailTone === 'brown' ? 'brown' : ''}">
           ${listing.isPro ? '<span class="badge">PRO</span>' : ''}
-          <button class="heart" id="fav-btn">${isFavorite(listing.id) ? '♥' : '♡'}</button>
+          <button type="button" class="heart ${isFavorite(listing.id) ? 'saved' : ''}" id="fav-btn" aria-label="Save">${isFavorite(listing.id) ? '♥' : '♡'}</button>
         </div>
         <div class="meta">${listing.mode === 'rent' ? 'For rent' : 'For sale'}</div>
-        <h1 style="margin:0;font-family:Fraunces,serif">${escapeHtml(listing.title)}</h1>
+        <h1 class="page-title">${escapeHtml(listing.title)}</h1>
         <div class="price">${priceLabel(listing)}</div>
-        <div class="meta">${escapeHtml(listing.ownerName)} · ★ ${listing.rating} (${listing.reviewCount}) · ${listing.distanceMiles} mi</div>
+        <div class="meta">${escapeHtml(listing.ownerName)} · ★ ${listing.rating} (${listing.reviewCount}) · ${formatMiles(listing.distanceMiles)}</div>
+      </section>
+      <aside class="panel stack booking-panel" id="booking-panel">
+        ${
+          listing.mode === 'rent'
+            ? `
+          <h2 class="section-title">Request rental</h2>
+          <div class="field"><label for="start">Start date</label><input id="start" type="date" value="${dates.startDate}" /></div>
+          <div class="field"><label for="end">End date</label><input id="end" type="date" value="${dates.endDate}" /></div>
+          <div class="field note-field"><label for="message">Message</label><textarea id="message" rows="3" placeholder="Pickup notes…"></textarea></div>
+        `
+            : `
+          <h2 class="section-title">Buy this gear</h2>
+          <div class="field note-field"><label for="message">Message</label><textarea id="message" rows="3" placeholder="Pickup notes…"></textarea></div>
+        `
+        }
+        <div class="book-dock ${listing.mode === 'rent' ? 'rent' : 'buy'}">
+          <div id="book-status"></div>
+          <div class="dock-price">
+            <strong id="quote-total">…</strong>
+            <span class="meta" id="quote-note">incl. fees & tax</span>
+          </div>
+          ${
+            listing.mode === 'rent'
+              ? `<button class="btn" type="button" id="book-btn">Request</button>`
+              : `<button class="btn secondary" type="button" id="cart-btn">Add to cart</button>
+                 <button class="btn" type="button" id="buy-btn">Buy now</button>`
+          }
+        </div>
+      </aside>
+      <section class="panel stack detail-copy">
         <p>${escapeHtml(listing.description)}</p>
-        <h3>Reviews</h3>
+        <h2 class="section-title">Reviews</h2>
         <div class="stack" id="reviews">
           ${
             reviews.length
@@ -56,27 +86,6 @@ export async function renderListing(id) {
           }
         </div>
       </section>
-      <aside class="panel stack" id="booking-panel">
-        ${
-          listing.mode === 'rent'
-            ? `
-          <h3 style="margin:0">Request rental</h3>
-          <div class="field"><label>Start date</label><input id="start" type="date" value="${dates.startDate}" /></div>
-          <div class="field"><label>End date</label><input id="end" type="date" value="${dates.endDate}" /></div>
-          <div class="field"><label>Message</label><textarea id="message" rows="3" placeholder="Pickup notes…"></textarea></div>
-          <div class="meta" id="quote">Quote loading…</div>
-          <button class="btn" id="book-btn">Send rental request</button>
-        `
-            : `
-          <h3 style="margin:0">Buy this gear</h3>
-          <div class="field"><label>Message</label><textarea id="message" rows="3" placeholder="Pickup notes…"></textarea></div>
-          <div class="meta" id="quote">Quote loading…</div>
-          <button class="btn" id="buy-btn">Buy now</button>
-          <button class="btn secondary" id="cart-btn">Add to cart</button>
-        `
-        }
-        <div id="book-status"></div>
-      </aside>
     </div>
   `;
 
@@ -86,10 +95,15 @@ export async function renderListing(id) {
       root.querySelector('[data-back]').addEventListener('click', () => navigate('/'));
       root.querySelector('#fav-btn').addEventListener('click', () => {
         toggleFavorite(listing);
-        root.querySelector('#fav-btn').textContent = isFavorite(listing.id) ? '♥' : '♡';
+        const favBtn = root.querySelector('#fav-btn');
+        const saved = isFavorite(listing.id);
+        favBtn.textContent = saved ? '♥' : '♡';
+        favBtn.classList.toggle('saved', saved);
+        favBtn.setAttribute('aria-label', saved ? 'Remove from saved' : 'Save');
       });
 
-      const quoteEl = root.querySelector('#quote');
+      const totalEl = root.querySelector('#quote-total');
+      const noteEl = root.querySelector('#quote-note');
       const statusEl = root.querySelector('#book-status');
 
       async function refreshQuote() {
@@ -102,9 +116,11 @@ export async function renderListing(id) {
                 }
               : {};
           const quote = await GearApi.quote(listing.id, body);
-          quoteEl.textContent = `Total $${quote.pricing.total.toFixed(2)} (incl. fees & tax)`;
+          totalEl.textContent = `$${quote.pricing.total.toFixed(2)}`;
+          noteEl.textContent = 'incl. fees & tax';
         } catch (err) {
-          quoteEl.textContent = err.message;
+          totalEl.textContent = '—';
+          noteEl.textContent = err.message;
         }
       }
 

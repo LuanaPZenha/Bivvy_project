@@ -13,13 +13,14 @@ export function renderProfile() {
   return {
     html: `
       <section class="panel stack">
-        <h1 style="margin:0;font-family:Fraunces,serif">Profile</h1>
+        <h1 class="page-title">Profile</h1>
         <div class="meta">${escapeHtml(user.name)} · ${escapeHtml(user.email)}</div>
-        <div class="stack">
-          <button class="btn secondary" data-go="/rentals">My rentals & messages</button>
-          <button class="btn secondary" data-go="/listings">My listings</button>
-          <button class="btn secondary" data-go="/favorites">Saved gear</button>
-          <button class="btn secondary" data-go="/cart">Cart</button>
+        <div class="stack menu">
+          <button class="btn secondary" type="button" data-go="/rentals">My rentals & messages</button>
+          <button class="btn secondary" type="button" data-go="/listings">My listings</button>
+          <button class="btn secondary" type="button" data-go="/favorites">Saved gear</button>
+          <button class="btn secondary" type="button" data-go="/cart">Cart</button>
+          <button class="btn" type="button" data-logout>Sign out</button>
         </div>
       </section>
     `,

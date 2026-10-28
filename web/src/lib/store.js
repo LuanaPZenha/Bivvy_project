@@ -52,6 +52,13 @@ export function clearCart() {
   save(CART_KEY, []);
 }
 
+export function formatMiles(miles) {
+  const n = Number(miles);
+  if (!Number.isFinite(n)) return '';
+  if (n < 0.1) return '< 0.1 mi';
+  return `${n.toFixed(1)} mi`;
+}
+
 export function priceLabel(listing) {
   if (listing.mode === 'buy') return `$${listing.buyPrice ?? 0}`;
   return `$${listing.pricePerDay ?? 0} / day`;
