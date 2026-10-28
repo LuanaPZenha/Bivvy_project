@@ -18,6 +18,6 @@ The same site is laid out for a phone browser (no install, no native app):
 - Inputs are 16px so mobile browsers do not zoom the page on focus.
 - Reviews and sign-in use on-page forms (the phone keyboard submits them).
 
-The site is static files. `server` serves them on port 3000 with the API. On a phone on the same network, open `http://<this-machine>:3000`.
+The site is static files. `web/package.json` only sets `"type": "module"` so Node can import those files in tests. There is no bundler and no runtime dependency. `server` serves the files on port 3000 with the API. On Vercel, the build copies them to `public/` and the CDN serves them. On a phone on the same network, open `http://<this-machine>:3000`.
 
 Brand tokens live in `web/src/styles.css` (forest / cream / gold). Product UI strings are English (US).

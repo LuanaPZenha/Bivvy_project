@@ -30,6 +30,8 @@ Bivvy is an outdoor adventure gear rental and resale **web marketplace** in **Ja
 
 ```
 /
+├── app.js           Vercel Express entry
+├── vercel.json
 ├── docs/
 ├── server/          Express API (JavaScript)
 ├── web/             Browser app (HTML, CSS, JavaScript)

@@ -6,3 +6,5 @@ uploads/
 .DS_Store
 coverage/
 server/uploads/
+.vercel/
+public/

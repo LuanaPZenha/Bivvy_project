@@ -1,0 +1,21 @@
+{
+  "name": "bivvy",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Bivvy marketplace. Vercel serves this Express app and the browser files in web/.",
+  "scripts": {
+    "start": "npm start --prefix server",
+    "test": "npm test --prefix server",
+    "build": "node scripts/copy-web-public.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "express": "^4.21.2",
+    "helmet": "^8.0.0",
+    "jsonwebtoken": "^9.0.2",
+    "morgan": "^1.10.0"
+  }
+}

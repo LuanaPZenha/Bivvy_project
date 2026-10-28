@@ -15,6 +15,7 @@ Browser (web/)  --HTTP JSON-->  Express (server/)  --memory store-->  in-process
 | Security | `server/src/security/` | Headers, rate limits, passwords, plain-text limits, JWT checks |
 | Domain | `server/src/domain/`, `server/src/services/` | Booking transitions, listing rules, pricing, distance |
 | Persistence | `server/src/store/`, `server/src/data/` | In-memory Maps and Seattle seed data (Postgres Planned) |
+| Hosting | `app.js`, `vercel.json`, `public/` | Vercel runs one Express function. The build copies `web/` to `public/` for the CDN |
 
 ## Request flow
 
@@ -30,8 +31,10 @@ Routes do not trust request bodies. Listing fields, dates, prices, and text go t
 ## Shape
 
 - One language (JavaScript) end-to-end
-- One deployable process
+- One Express app, run locally as a process or on Vercel as a single function
 - Marketplace loop in the browser: browse → book → pay → chat → review
+
+On Vercel the store is still the in-memory Maps. Seed data comes back on each instance. Accounts and bookings created by visitors do not persist across instances.
 
 ## Planned
 

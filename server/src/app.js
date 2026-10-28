@@ -19,9 +19,20 @@ function createApp(overrides = {}) {
   const app = express();
 
   app.disable('x-powered-by');
-  if (process.env.TRUST_PROXY === 'true') app.set('trust proxy', 1);
+  // Vercel terminates TLS and forwards the client IP. Trust that hop only there
+  // or when an operator explicitly opts in.
+  if (process.env.TRUST_PROXY === 'true' || process.env.VERCEL === '1') {
+    app.set('trust proxy', 1);
+  }
   app.use(helmet(helmetOptions()));
   app.use(express.json({ limit: '100kb' }));
+  if (overrides.seedOnRequest) {
+    let pending = null;
+    app.use((_req, _res, next) => {
+      if (!pending) pending = seedDemoUser(store);
+      pending.then(() => next()).catch(next);
+    });
+  }
   if (process.env.NODE_ENV !== 'test') {
     app.use(morgan(config.nodeEnv === 'production' ? 'combined' : 'dev'));
   }

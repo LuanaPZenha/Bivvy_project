@@ -24,3 +24,5 @@ npm run dev
 - `src/services/pricing.js` / `geo.js`
 - `src/store/memoryStore.js` — process memory
 - `src/middleware/auth.js` — JWT (HS256)
+
+Vercel imports the repo-root `app.js`, which calls `createApp({ seedOnRequest: true })`. Local `npm start` still boots `src/index.js`.

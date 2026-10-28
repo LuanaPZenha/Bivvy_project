@@ -57,7 +57,7 @@ Controls below map to the OWASP Top 10 (2021) for this JavaScript monolith. Item
 - Real Stripe webhook signature checks
 - Persistent audit log
 - Dependency review beyond `npm audit` in CI
-- TLS termination at the host
+- TLS termination is provided by Vercel for that deploy. A self-hosted host still needs its own TLS.
 
 Never commit `.env`. Use `.env.example` placeholders only.
 
@@ -68,4 +68,4 @@ Optional environment:
 | `JWT_ACCESS_SECRET` | development placeholder | Required and unique when `NODE_ENV=production` |
 | `AUTH_RATE_LIMIT_MAX` | `10` (`1000` when `NODE_ENV=test`) | Login/register attempts per window |
 | `AUTH_RATE_LIMIT_WINDOW_MS` | `900000` | Rate-limit window |
-| `TRUST_PROXY` | unset | Set `true` only behind a trusted proxy |
+| `TRUST_PROXY` | unset | Set `true` only behind a trusted proxy. `VERCEL=1` trusts one hop |

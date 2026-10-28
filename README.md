@@ -13,6 +13,7 @@ Outdoor adventure gear rental & resale marketplace (**English UI**, US market).
 ```
 server/     Express API (JavaScript)
 web/        Browser app (HTML, CSS, JavaScript)
+app.js      Vercel entry (exports the Express app)
 docs/       Product & API docs (English)
 Dockerfile  Production image (API + web)
 docker-compose.yml
@@ -36,6 +37,10 @@ Or:
 ```bash
 docker compose up --build
 ```
+
+## Vercel
+
+Set `JWT_ACCESS_SECRET` in the Vercel project, then `npx vercel deploy --prod`. Details and the in-memory limit are in [docs/ci-cd.md](./docs/ci-cd.md).
 
 ## What shipped
 
