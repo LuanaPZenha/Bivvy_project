@@ -52,7 +52,7 @@ describe('Bivvy API', () => {
   });
 
   it('lists nearby gear sorted by price', async () => {
-    const res = await request('GET', '/api/gear/near?mode=rent&sort=price_asc');
+    const res = await request('GET', '/api/listings/near?mode=rent&sort=price_asc');
     assert.equal(res.status, 200);
     assert.ok(res.json.count > 0);
     const prices = res.json.listings.map((l) => l.pricePerDay);

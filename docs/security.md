@@ -4,9 +4,10 @@
 
 - Passwords hashed with bcryptjs
 - JWT access tokens (`Authorization: Bearer`)
-- Helmet + CORS allowlist
+- Helmet response headers
 - JSON body size limit
-- No secrets in the web bundle (only public API base if configured)
+- Site and API share one origin, so the browser does not send a cross-origin token
+- No secrets in `web/`
 
 ## Planned
 

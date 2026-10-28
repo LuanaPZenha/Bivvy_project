@@ -2,7 +2,7 @@
 
 Outdoor adventure gear rental & resale marketplace (**English UI**, US market).
 
-**v2 — pure JavaScript.** One Node.js API + one vanilla JS web app. No Expo / React Native mobile app.
+**JavaScript only.** One Node.js API and one browser app of plain HTML, CSS, and JavaScript.
 
 ## Documentation
 
@@ -12,9 +12,9 @@ Outdoor adventure gear rental & resale marketplace (**English UI**, US market).
 
 ```
 server/     Express API (JavaScript)
-web/        Vite SPA (vanilla JavaScript)
+web/        Browser app (HTML, CSS, JavaScript)
 docs/       Product & API docs (English)
-Dockerfile  Production image (API + built web)
+Dockerfile  Production image (API + web)
 docker-compose.yml
 ```
 
@@ -22,25 +22,14 @@ docker-compose.yml
 
 ```bash
 cp .env.example .env
-
-# API
-cd server && npm install && npm test && npm run dev
-
-# Web (another terminal)
-cd web && npm install && npm run dev
+cd server && npm install && npm test && npm start
 ```
 
-- Web (Vite): http://localhost:5173  
-- API: http://localhost:3000  
-- Demo login: `demo@bivvy.test` / `BivvyDemo123`
+Open http://localhost:3000 — the same process serves the API and the site.
 
-### Single production process
+On a phone on the same Wi-Fi, open `http://<this-machine>:3000`.
 
-```bash
-cd web && npm install && npm run build && cd ..
-cd server && npm install && npm start
-# serves API + web/dist on :3000
-```
+Demo login: `demo@bivvy.test` / `BivvyDemo123`
 
 Or:
 

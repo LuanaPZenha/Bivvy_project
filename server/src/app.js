@@ -2,7 +2,6 @@
 
 const path = require('path');
 const express = require('express');
-const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
 const config = require('./config');
@@ -19,12 +18,6 @@ function createApp(overrides = {}) {
 
   app.disable('x-powered-by');
   app.use(helmet({ contentSecurityPolicy: false }));
-  app.use(
-    cors({
-      origin: config.corsOrigin === '*' ? true : config.corsOrigin.split(',').map((s) => s.trim()),
-      credentials: true,
-    }),
-  );
   app.use(express.json({ limit: '100kb' }));
   if (process.env.NODE_ENV !== 'test') {
     app.use(morgan(config.nodeEnv === 'production' ? 'combined' : 'dev'));
@@ -46,16 +39,14 @@ function createApp(overrides = {}) {
   const listingsRouter = createListingsRouter(store);
   app.use('/api/auth', createAuthRouter(store));
   app.use('/api/listings', listingsRouter);
-  // Alias for discovery clients that still call /api/gear/*
-  app.use('/api/gear', listingsRouter);
   app.use('/api/bookings', createBookingsRouter(store));
   app.use('/api/cart', createCartRouter(store));
 
-  const webDist = path.join(__dirname, '../../web/dist');
-  app.use(express.static(webDist));
+  const webRoot = path.join(__dirname, '../../web');
+  app.use(express.static(webRoot));
   app.get('*', (req, res, next) => {
     if (req.path.startsWith('/api')) return next();
-    res.sendFile(path.join(webDist, 'index.html'), (err) => {
+    res.sendFile(path.join(webRoot, 'index.html'), (err) => {
       if (err) next();
     });
   });

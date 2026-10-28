@@ -18,7 +18,7 @@ npm run dev
 
 ## Modules
 
-- `src/routes/` — auth, listings/gear, bookings, cart
+- `src/routes/` — auth, listings, bookings, cart
 - `src/store/memoryStore.js` — process memory
 - `src/services/pricing.js` / `geo.js`
 - `src/middleware/auth.js` — JWT

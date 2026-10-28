@@ -1,4 +1,4 @@
-const API_BASE = import.meta.env.VITE_API_URL || '';
+const API_BASE = '';
 
 function getToken() {
   return localStorage.getItem('bivvy_token') || '';
@@ -53,11 +53,11 @@ export const GearApi = {
     Object.entries(params).forEach(([k, v]) => {
       if (v != null && v !== '') qs.set(k, String(v));
     });
-    return api(`/api/gear/near?${qs}`);
+    return api(`/api/listings/near?${qs}`);
   },
-  get: (id) => api(`/api/gear/${encodeURIComponent(id)}`),
-  quote: (id, body) => api(`/api/gear/${encodeURIComponent(id)}/quote`, { method: 'POST', body }),
-  reviews: (id) => api(`/api/gear/${encodeURIComponent(id)}/reviews`),
+  get: (id) => api(`/api/listings/${encodeURIComponent(id)}`),
+  quote: (id, body) => api(`/api/listings/${encodeURIComponent(id)}/quote`, { method: 'POST', body }),
+  reviews: (id) => api(`/api/listings/${encodeURIComponent(id)}/reviews`),
 };
 
 export const ListingsApi = {

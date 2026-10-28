@@ -1,4 +1,3 @@
-import './styles.css';
 import { currentPath, onRoute } from './lib/router.js';
 import { renderShell, wireShell } from './views/layout.js';
 import { renderHome } from './views/home.js';

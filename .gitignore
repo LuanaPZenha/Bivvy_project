@@ -5,5 +5,4 @@ uploads/
 *.log
 .DS_Store
 coverage/
-web/dist/
 server/uploads/

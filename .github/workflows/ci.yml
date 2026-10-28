@@ -5,7 +5,7 @@ on:
   pull_request:
 
 jobs:
-  build-test:
+  test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -13,16 +13,9 @@ jobs:
         with:
           node-version: '22'
           cache: npm
-          cache-dependency-path: |
-            server/package-lock.json
-            web/package-lock.json
+          cache-dependency-path: server/package-lock.json
       - name: Server install & test
         working-directory: server
         run: |
           npm install
           npm test
-      - name: Web install & build
-        working-directory: web
-        run: |
-          npm install
-          npm run build
